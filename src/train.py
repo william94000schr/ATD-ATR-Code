@@ -65,4 +65,4 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs', type=int, default=5, help='number of epochs')
     parser.add_argument('--proportion', type=float, default=5, help='proportion of the original dataset')
     args = parser.parse_args()
-    train(args.num_classes, args.num_epochs)
+    train(args.num_classes, args.num_epochs, args.proportion)
