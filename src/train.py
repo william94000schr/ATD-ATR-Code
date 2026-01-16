@@ -30,7 +30,7 @@ def train(num_classes, num_epochs):
     dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform)
 
     train_loader = DataLoader(dataset, batch_size=config["training"]["batch_size"], shuffle=True, collate_fn=collate_fn)
-    print(batch_size=config["training"]["batch_size"])
+    print(config["training"]["batch_size"])
 
     model = get_model(num_classes + 1)
     model.to(device)
