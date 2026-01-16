@@ -29,12 +29,8 @@ def train(num_classes, num_epochs):
     my_transform = CocoToFasterRCNN()
     dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform)
 
-    data_loader = DataLoader(
-        dataset, 
-        batch_size=config["training"]["batch_size"], 
-        shuffle=True, 
-        collate_fn=collate_fn
-    )
+    train_loader = DataLoader(dataset, batch_size=config["training"]["batch_size"], shuffle=True, collate_fn=collate_fn)
+    print(batch_size=config["training"]["batch_size"])
 
     model = get_model(num_classes + 1)
     model.to(device)
@@ -46,7 +42,7 @@ def train(num_classes, num_epochs):
     model.train()
 
     for epoch in tqdm(range(num_epochs), desc = "Epochs" ):
-        for images, targets in tqdm(data_loader, desc = "Batches", leave = False):
+        for images, targets in tqdm(train_loader, desc = "Batches", leave = False):
 
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
