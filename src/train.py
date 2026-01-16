@@ -13,7 +13,7 @@ def collate_fn(batch):
 
     return tuple(zip(*batch))
 
-def train(num_classes, num_epochs):
+def train(num_classes, num_epochs, proportion):
 
     num_classes = num_classes
 
@@ -27,7 +27,7 @@ def train(num_classes, num_epochs):
     img_dir = project_root / config["data"]["images"]["train"]["img_dir"]
     ann_file = project_root / config["data"]["annotations"]["train"]["ann_file"]
     my_transform = CocoToFasterRCNN()
-    dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform)
+    dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform, subset_ratio=proportion)
 
     train_loader = DataLoader(dataset, batch_size=config["training"]["batch_size"], shuffle=True, collate_fn=collate_fn)
 
@@ -63,5 +63,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--num_classes', type=int, default=10, help='number of classes')
     parser.add_argument('--num_epochs', type=int, default=5, help='number of epochs')
+    parser.add_argument('--proportion', type=int, default=5, help='proportion of the original dataset')
     args = parser.parse_args()
     train(args.num_classes, args.num_epochs)

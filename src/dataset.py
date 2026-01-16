@@ -4,15 +4,21 @@ from typing import Any, Callable, Optional, Union
 from PIL import Image
 from torchvision.datasets import VisionDataset
 from pycocotools.coco import COCO
+import random
 
 
 class SAR_ATR_Dataset(VisionDataset):
 
-    def __init__(self, root: Union[str, Path], annFile: str, transforms) -> None:
+    def __init__(self, root: Union[str, Path], annFile: str, transforms, subset_ratio = 1.0) -> None:
         
         super().__init__(root, transforms= transforms)
         self.coco = COCO(annFile)
         self.ids = list(sorted(self.coco.imgs.keys()))
+
+        if subset_ratio < 1.0:        
+            n_samples = int(len(self.ids) * subset_ratio)
+            random.seed(94)
+            self.ids = random.sample(self.ids, n_samples)
 
     def _load_image(self, id: int) -> Image.Image:
         path = self.coco.loadImgs(id)[0]["file_name"]
