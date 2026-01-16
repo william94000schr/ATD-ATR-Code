@@ -47,6 +47,10 @@ def train(num_classes, num_epochs, proportion):
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
             loss_dict = model(images, targets)
+
+            print(loss_dict)
+            print(loss_dict.keys())
+            print(type(loss_dict))
             losses = sum(loss for loss in loss_dict.values())
             
             optimizer.zero_grad()
@@ -63,6 +67,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--num_classes', type=int, default=10, help='number of classes')
     parser.add_argument('--num_epochs', type=int, default=5, help='number of epochs')
-    parser.add_argument('--proportion', type=float, default=5, help='proportion of the original dataset')
+    parser.add_argument('--proportion', type=float, default=1.0, help='proportion of the original dataset')
     args = parser.parse_args()
     train(args.num_classes, args.num_epochs, args.proportion)
