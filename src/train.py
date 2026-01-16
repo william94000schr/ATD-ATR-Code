@@ -30,7 +30,7 @@ def train(num_classes, num_epochs, proportion):
     my_transform = CocoToFasterRCNN()
     dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform, subset_ratio=proportion)
 
-    train_loader = DataLoader(dataset, batch_size=config["training"]["batch_size"], shuffle=True, collate_fn=collate_fn)
+    train_loader = DataLoader(dataset, batch_size=config["training"]["batch_size"], shuffle=True, collate_fn=collate_fn, num_workers=2, pin_memory=True)
 
     model = get_model(num_classes + 1)
     model.to(device)
@@ -38,7 +38,7 @@ def train(num_classes, num_epochs, proportion):
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr= config["training"]["learning_rate"], momentum=config["training"]["momentum"], weight_decay=config["training"]["weight_decay"])
 
-
+    torch.backends.cudnn.benchmark = True 
     model.train()
 
     results = []
@@ -54,7 +54,7 @@ def train(num_classes, num_epochs, proportion):
         }
         num_batches = 0
 
-        for images, targets in tqdm(train_loader, desc = "Batches", leave = False):
+        for images, targets in train_loader:
 
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
@@ -66,6 +66,7 @@ def train(num_classes, num_epochs, proportion):
             result["loss_objectness"] += loss_dict["loss_objectness"].item()
             result["loss_rpn_box_reg"] += loss_dict["loss_rpn_box_reg"].item()
             losses_epoch = sum(loss for loss in loss_dict.values())
+            result["loss_total"] += losses_epoch.item()
             
             optimizer.zero_grad()
             losses_epoch.backward()
