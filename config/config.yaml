@@ -1,0 +1,21 @@
+# config.yaml
+data:
+  images:
+    train:
+      img_dir: "data/images/train"
+
+    test:
+      img_dir: "data/images/test"
+    
+  annotations:
+    train : 
+      ann_file: "data/annotations/train.json"
+    test:
+      ann_file: "data/annotations/test.json"
+
+training:
+  batch_size: 4
+  epochs: 15
+  lr: 0.005
+  momentum : 0.9
+  weight_decay : 0.0005
