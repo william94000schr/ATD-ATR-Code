@@ -22,7 +22,7 @@ class CocoToFasterRCNN():
 
             all_labels.append(annotations["category_id"])
 
-        #if no object , we creat an empty tensor
+        #if it is not an object , we creat an empty tensor
         if len(all_boxes) > 0:
             boxes = torch.as_tensor(all_boxes, dtype = torch.float32)
             labels = torch.as_tensor(all_labels, dtype = torch.int64)

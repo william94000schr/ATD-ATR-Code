@@ -3,6 +3,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 import yaml
+import json
 import argparse
 from transforms import CocoToFasterRCNN
 from dataset import SAR_ATR_Dataset
@@ -40,7 +41,19 @@ def train(num_classes, num_epochs, proportion):
 
     model.train()
 
+    results = []
     for epoch in tqdm(range(num_epochs), desc = "Epochs" ):
+
+        result = {
+            "epoch": epoch,
+            "loss_classifier": 0,
+            "loss_box_reg": 0,
+            "loss_objectness": 0,
+            "loss_rpn_box_reg": 0,
+            "loss_total": 0
+        }
+        num_batches = 0
+
         for images, targets in tqdm(train_loader, desc = "Batches", leave = False):
 
             images = list(image.to(device) for image in images)
@@ -48,19 +61,34 @@ def train(num_classes, num_epochs, proportion):
 
             loss_dict = model(images, targets)
 
-            print(loss_dict)
-            print(loss_dict.keys())
-            print(type(loss_dict))
-            losses = sum(loss for loss in loss_dict.values())
+            result["loss_classifier"] += loss_dict["loss_classifier"].item()
+            result["loss_box_reg"] += loss_dict["loss_box_reg"].item()
+            result["loss_objectness"] += loss_dict["loss_objectness"].item()
+            result["loss_rpn_box_reg"] += loss_dict["loss_rpn_box_reg"].item()
+            losses_epoch = sum(loss for loss in loss_dict.values())
             
             optimizer.zero_grad()
-            losses.backward()
+            losses_epoch.backward()
             optimizer.step()
 
-        print(f"Epoch {epoch} terminée. Loss: {losses.item()}")
+            num_batches += 1
+
+        for key in result:
+            if key != "epoch":
+                result[key] /= num_batches
+        results.append(result)
     
-        os.makedirs("./models", exist_ok=True)
-        torch.save(model.state_dict(), "../models/faster_rcnn.pt")
+        print(f"\nEpoch {epoch}:")
+        for key, value in result.items():
+            if key != "epoch":
+                print(f"  {key}: {value:.4f}")
+
+
+    os.makedirs("./outputs", exist_ok=True)
+    with open("../outputs/train_results.json", "w", encoding="utf-8") as file:
+        json.dump(results, file, indent=2, ensure_ascii=False)
+    os.makedirs("./models", exist_ok=True)
+    torch.save(model.state_dict(), "../models/faster_rcnn.pt")
 
 if __name__ == "__main__":
     
