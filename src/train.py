@@ -63,6 +63,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--num_classes', type=int, default=10, help='number of classes')
     parser.add_argument('--num_epochs', type=int, default=5, help='number of epochs')
-    parser.add_argument('--proportion', type=int, default=5, help='proportion of the original dataset')
+    parser.add_argument('--proportion', type=float, default=5, help='proportion of the original dataset')
     args = parser.parse_args()
     train(args.num_classes, args.num_epochs)
