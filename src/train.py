@@ -7,6 +7,7 @@ import argparse
 from transforms import CocoToFasterRCNN
 from dataset import SAR_ATR_Dataset
 from model import get_model
+from tqdm import tqdm
 
 def collate_fn(batch):
 
@@ -44,8 +45,8 @@ def train(num_classes, num_epochs):
 
     model.train()
 
-    for epoch in range(num_epochs):
-        for images, targets in data_loader:
+    for epoch in tqdm(range(num_epochs), desc = "Epochs" ):
+        for images, targets in tqdm(data_loader, desc = "Batches", leave = False):
 
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
