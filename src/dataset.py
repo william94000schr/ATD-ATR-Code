@@ -2,7 +2,7 @@ import os.path
 from pathlib import Path
 from typing import Any, Callable, Optional, Union
 from PIL import Image
-from torchvision import VisionDataset
+from torchvision.datasets import VisionDataset
 from pycocotools.coco import COCO
 
 
