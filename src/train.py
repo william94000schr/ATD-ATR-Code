@@ -38,13 +38,13 @@ def train(num_classes, num_epochs, proportion):
     optimizer = torch.optim.SGD(params, lr= config["training"]["learning_rate"], momentum=config["training"]["momentum"], weight_decay=config["training"]["weight_decay"])
 
     use_amp = torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 7
-    scaler = GradScaler() if use_amp else None
+    scaler = GradScaler('cuda') if use_amp else None
     torch.backends.cudnn.benchmark = True 
 
     model.train()
 
     results = []
-    for epoch in tqdm(range(num_epochs), desc = "Epochs", position = 0):
+    for epoch in range(num_epochs):
 
         result = {
             "epoch": epoch,
@@ -65,7 +65,7 @@ def train(num_classes, num_epochs, proportion):
             optimizer.zero_grad()
 
             if use_amp:
-                with autocast():
+                with autocast('cuda'):
                     loss_dict = model(images, targets)
                     losses_epoch = sum(loss for loss in loss_dict.values())
                 scaler.scale(losses_epoch).backward()
@@ -85,10 +85,9 @@ def train(num_classes, num_epochs, proportion):
             
             pbar.set_postfix({
                 'total': f'{losses_epoch.item():.3f}',
-                'loss_classiffier': f'{loss_dict["loss_classifier"].item():.3f}',
-                'loss_box_reg': f'{loss_dict["loss_box_reg"].item():.3f}',
-                'loss_objectness': f'{loss_dict["loss_objectness"].item():.3f}',
-                'loss_rpn_box_reg': f'{loss_dict["loss_rpn_box_reg"].item():.3f}'                
+                'cls': f'{loss_dict["loss_classifier"].item():.3f}',
+                'box': f'{loss_dict["loss_box_reg"].item():.3f}',
+                'obj': f'{loss_dict["loss_objectness"].item():.3f}'               
             })
 
             num_batches += 1
