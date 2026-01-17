@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
-from torch.amp import GradScaler, autocast
+from torch.cuda.amp import autocast, GradScaler
 import yaml
 import json
 import argparse
@@ -38,7 +38,7 @@ def train(num_classes, num_epochs, proportion):
     optimizer = torch.optim.SGD(params, lr= config["training"]["learning_rate"], momentum=config["training"]["momentum"], weight_decay=config["training"]["weight_decay"])
 
     use_amp = torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 7
-    scaler = GradScaler(device='cuda') if use_amp else None
+    scaler = GradScaler() if use_amp else None
     torch.backends.cudnn.benchmark = True 
 
     model.train()
@@ -65,7 +65,7 @@ def train(num_classes, num_epochs, proportion):
             optimizer.zero_grad()
 
             if use_amp:
-                with autocast(device='cuda'):
+                with autocast():
                     loss_dict = model(images, targets)
                     losses_epoch = sum(loss for loss in loss_dict.values())
                 scaler.scale(losses_epoch).backward()
