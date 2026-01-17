@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
+from torch.cuda.amp import autocast, GradScaler
 import yaml
 import json
 import argparse
@@ -15,8 +16,6 @@ def collate_fn(batch):
     return tuple(zip(*batch))
 
 def train(num_classes, num_epochs, proportion):
-
-    num_classes = num_classes
 
     project_root = Path(__file__).parent.parent 
     config_path = project_root / "config" / "config.yaml"
@@ -38,11 +37,14 @@ def train(num_classes, num_epochs, proportion):
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr= config["training"]["learning_rate"], momentum=config["training"]["momentum"], weight_decay=config["training"]["weight_decay"])
 
+    use_amp = torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 7
+    scaler = GradScaler() if use_amp else None
     torch.backends.cudnn.benchmark = True 
+
     model.train()
 
     results = []
-    for epoch in tqdm(range(num_epochs), desc = "Epochs" ):
+    for epoch in tqdm(range(num_epochs), desc = "Epochs", position = 0):
 
         result = {
             "epoch": epoch,
@@ -54,23 +56,40 @@ def train(num_classes, num_epochs, proportion):
         }
         num_batches = 0
 
-        for images, targets in train_loader:
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch}", position=1, leave=False)
+        for images, targets in pbar:
 
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-            loss_dict = model(images, targets)
+            optimizer.zero_grad()
+
+            if use_amp:
+                with autocast():
+                    loss_dict = model(images, targets)
+                    losses_epoch = sum(loss for loss in loss_dict.values())
+                scaler.scale(losses_epoch).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss_dict = model(images, targets)
+                losses_epoch = sum(loss for loss in loss_dict.values())
+                losses_epoch.backward()
+                optimizer.step()
 
             result["loss_classifier"] += loss_dict["loss_classifier"].item()
             result["loss_box_reg"] += loss_dict["loss_box_reg"].item()
             result["loss_objectness"] += loss_dict["loss_objectness"].item()
             result["loss_rpn_box_reg"] += loss_dict["loss_rpn_box_reg"].item()
-            losses_epoch = sum(loss for loss in loss_dict.values())
             result["loss_total"] += losses_epoch.item()
             
-            optimizer.zero_grad()
-            losses_epoch.backward()
-            optimizer.step()
+            pbar.set_postfix({
+                'total': f'{losses_epoch.item():.3f}',
+                'loss_classiffier': f'{loss_dict["loss_classifier"].item():.3f}',
+                'loss_box_reg': f'{loss_dict["loss_box_reg"].item():.3f}',
+                'loss_objectness': f'{loss_dict["loss_objectness"].item():.3f}',
+                'loss_rpn_box_reg': f'{loss_dict["loss_rpn_box_reg"].item():.3f}'                
+            })
 
             num_batches += 1
 
@@ -85,10 +104,10 @@ def train(num_classes, num_epochs, proportion):
                 print(f"  {key}: {value:.4f}")
 
 
-    os.makedirs("./outputs", exist_ok=True)
+    os.makedirs("../outputs", exist_ok=True)
     with open("../outputs/train_results.json", "w", encoding="utf-8") as file:
         json.dump(results, file, indent=2, ensure_ascii=False)
-    os.makedirs("./models", exist_ok=True)
+    os.makedirs("../models", exist_ok=True)
     torch.save(model.state_dict(), "../models/faster_rcnn.pt")
 
 if __name__ == "__main__":
