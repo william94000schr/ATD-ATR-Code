@@ -56,7 +56,7 @@ def train(num_classes, num_epochs, proportion):
         }
         num_batches = 0
 
-        pbar = tqdm(train_loader, desc=f"Epoch {epoch}", position=1, leave=False)
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch}")
         for images, targets in pbar:
 
             images = list(image.to(device) for image in images)
