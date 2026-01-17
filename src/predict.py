@@ -14,7 +14,7 @@ def collate_fn(batch):
 
     return tuple(zip(*batch))
 
-def predict(num_classes, num_images, threshold):
+def predict(num_classes, num_images, threshold, proportion):
 
     project_root = Path(__file__).parent.parent 
     with open("../config/config.yaml", 'r') as stream:
@@ -67,5 +67,6 @@ if __name__ == "__main__":
     parser.add_argument('--num_classes', type=int, default=10, help='number of classes')
     parser.add_argument('--num_images', type=int, default=1, help='number of images we want to visualize')
     parser.add_argument('--threshold', type=float, default=0.5, help='threshold of detection')
+    parser.add_argument('--proportion', type=float, default=1.0, help='proportion of the original dataset')
     args = parser.parse_args()
-    predict(args.num_classes, args.num_images, args.threshold)
+    predict(args.num_classes, args.num_images, args.threshold, args.proportion)
