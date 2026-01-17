@@ -6,10 +6,12 @@ from torch.cuda.amp import autocast, GradScaler
 import yaml
 import json
 import argparse
+import warnings
 from transforms import CocoToFasterRCNN
 from dataset import SAR_ATR_Dataset
 from model import get_model
 from tqdm import tqdm
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 def collate_fn(batch):
 
