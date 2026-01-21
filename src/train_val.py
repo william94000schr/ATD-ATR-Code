@@ -211,11 +211,9 @@ def main(num_classes, num_epochs, proportion):
     os.makedirs("../models", exist_ok=True)
     torch.save(model.state_dict(), "../models/faster_rcnn.pt")
     
-    print(f"\n{'='*60}")
     print("Training completed!")
     print(f"Model saved to: ../models/faster_rcnn.pt")
     print(f"Results saved to: ../outputs/train_results.json")
-    print(f"{'='*60}")
 
 
 if __name__ == "__main__":

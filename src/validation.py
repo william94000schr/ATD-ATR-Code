@@ -27,11 +27,11 @@ def prepare_for_json(dict_results):
             clean_dict[k] = v
     return clean_dict
 
-def validation(num_classes, proportion):
+def validation(num_classes, proportion, score_threshold):
 
     project_root = Path(__file__).parent.parent 
     config_path = project_root / "config" / "config.yaml"
-    with open("../config/config.yaml", 'r') as stream:
+    with open(config_path, 'r') as stream:
         config = yaml.safe_load(stream)
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -59,11 +59,21 @@ def validation(num_classes, proportion):
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
             preds = model(images)
-            
-            metric1.update(preds, targets)
-            metric2.update(preds, targets)
 
-            for target, pred in zip(targets, preds):
+            preds_filtered = []
+            for pred in preds:
+                
+                mask = pred['scores'] > score_threshold
+                preds_filtered.append({
+                    'boxes': pred['boxes'][mask],
+                    'labels': pred['labels'][mask],
+                    'scores': pred['scores'][mask]
+                })
+            
+            metric1.update(preds_filtered, targets)
+            metric2.update(preds_filtered, targets)
+
+            for target, pred in zip(targets, preds_filtered):
                 results_detailed.append({
                     "ground_truth": {
                         "boxes": target["boxes"].tolist(),
@@ -97,5 +107,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--num_classes', type=int, default=10, help='number of classes')
     parser.add_argument('--proportion', type=float, default=1.0, help='proportion of the original dataset')
+    parser.add_argument('--score_threshold', type=float, default=0.05, help='threshold for box we eliminate')
     args = parser.parse_args()
-    validation(args.num_classes, args.proportion)
+    validation(args.num_classes, args.proportion, args.score_threshold)
