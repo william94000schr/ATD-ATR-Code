@@ -74,7 +74,7 @@ def train_one_epoch(model, train_loader, optimizer, device, scaler, use_amp, epo
 
 def validate_one_epoch(model, val_loader, device, use_amp, epoch):
     """Valide le modèle sur une epoch"""
-    model.eval()
+    model.train()
     
     result = {
         "loss_classifier": 0,
@@ -87,7 +87,7 @@ def validate_one_epoch(model, val_loader, device, use_amp, epoch):
 
     pbar = tqdm(val_loader, desc=f"Val Epoch {epoch}")
     
-    with torch.no_grad():  # Pas de gradient en validation
+    with torch.no_grad():  
         for images, targets in pbar:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
