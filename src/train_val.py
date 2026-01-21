@@ -156,7 +156,7 @@ def main(num_classes, num_epochs, proportion):
                           shuffle=False, collate_fn=collate_fn, num_workers=2, pin_memory=True)
 
     # Modèle
-    model = get_model(num_classes)
+    model = get_model(num_classes + 1)
     model.to(device)
 
     # Optimizer
