@@ -8,6 +8,8 @@ from transforms import CocoToFasterRCNN
 from dataset import SAR_ATR_Dataset
 from model import get_model
 from PIL import Image, ImageDraw
+from torchvision.utils import draw_bounding_boxes
+from torchvision.transforms.functional import to_pil_image
 
 
 def collate_fn(batch):
@@ -37,27 +39,42 @@ def predict(num_classes, num_images, threshold, proportion):
     with torch.no_grad():
         for idx in indices:
             image_tensor, target = dataset[idx]
-            orig_image = dataset._load_image(dataset.ids[idx])
+
+            # Obligé de passer par une liste dans le modèle
+            # -> On récupère donc une liste (contenant un seul élément)            
             prediction = model([image_tensor.to(device)])[0]
-            draw = ImageDraw.Draw(orig_image)
+            
+            #Bounding box pour la vérité terrain
+            img_with_GT = draw_bounding_boxes(image_tensor,
+                                boxes = target["boxes"],
+                                labels = [str(i.item()) for i in target["labels"]], # Liste de String obligatoire
+                                colors = "green",
+                                width = 3,
+                                label_colors = "white",
+                                label_background_colors = "green",
+                                )
+            
+            #Bounding box pour la prédiction
+            img_with_GT_and_preds = draw_bounding_boxes(img_with_GT,
+                                boxes = prediction["boxes"],
+                                labels = [f"{label} : {score}" for label,score in zip(prediction["targets"], prediction["scores"])],
+                                colors = "red",
+                                width = 3,
+                                label_colors = "white",
+                                label_background_colors = "red",
+                                )
 
-
-            print("Vérité Terrain:")
+            print(idx)
+            print("\nVérité Terrain:")
             for box, label in zip(target['boxes'], target['labels']):
-                b = box.numpy()
-                draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="green", width=2)
-                draw.text((b[0], b[3]), f"GT:{label.item()}", fill="green")
                 print(f"  Classe: {label.item()}\n")
 
             print("Prédictions du modèle:")
             for box, label, score in zip(prediction['boxes'], prediction['labels'], prediction['scores']):
                 if score > threshold: 
-                    b = box.cpu().numpy()
-                    draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="red", width=3)
-                    draw.text((b[0], b[1]), f"Cl:{label.item()} {score:.2f}", fill="red")
                     print(f"Classe: {label.item()} | Score: {score:.2f}\n")
 
-            orig_image.save(f"../outputs/predictions/pred_{idx}.png")
+            to_pil_image(img_with_GT_and_preds).save(f"../outputs/predictions/pred_{idx}.png")
 
 
 
