@@ -49,19 +49,21 @@ def predict(num_classes, num_images, threshold, proportion):
                                 boxes = target["boxes"],
                                 labels = [str(i.item()) for i in target["labels"]], # Liste de String obligatoire
                                 colors = "green",
-                                width = 3,
+                                width = 1,
                                 label_colors = "white",
                                 label_background_colors = "green",
+                                fill_labels = True
                                 )
             
             #Bounding box pour la prédiction
             img_with_GT_and_preds = draw_bounding_boxes(img_with_GT,
                                 boxes = prediction["boxes"],
-                                labels = [f"{label} : {score}" for label,score in zip(prediction["labels"], prediction["scores"])],
+                                labels = [f"{label} : {score:.2f}" for label,score in zip(prediction["labels"], prediction["scores"])],
                                 colors = "red",
-                                width = 3,
+                                width = 1,
                                 label_colors = "white",
                                 label_background_colors = "red",
+                                fill_labels = True
                                 )
 
             print(idx)
