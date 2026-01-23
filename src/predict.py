@@ -57,7 +57,7 @@ def predict(num_classes, num_images, threshold, proportion):
             #Bounding box pour la prédiction
             img_with_GT_and_preds = draw_bounding_boxes(img_with_GT,
                                 boxes = prediction["boxes"],
-                                labels = [f"{label} : {score}" for label,score in zip(prediction["targets"], prediction["scores"])],
+                                labels = [f"{label} : {score}" for label,score in zip(prediction["labels"], prediction["scores"])],
                                 colors = "red",
                                 width = 3,
                                 label_colors = "white",
