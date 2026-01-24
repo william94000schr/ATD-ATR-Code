@@ -10,7 +10,7 @@ from tqdm import tqdm
 from transforms import CocoToFasterRCNN
 from dataset import SAR_ATR_Dataset
 from model import get_model
-from torchmetrics.detection import IntersectionOverUnion, MeanAveragePrecision
+from torchmetrics.detection import MeanAveragePrecision
 
 
 def collate_fn(batch):
@@ -27,7 +27,16 @@ def prepare_for_json(dict_results):
             clean_dict[k] = v
     return clean_dict
 
-def validation(num_classes, proportion, score_threshold):
+def get_class_names(ann_file):
+    """Récupère les noms des classes depuis le fichier COCO"""
+    with open(ann_file, 'r') as f:
+        coco_data = json.load(f)
+    
+    # Créer un dictionnaire {id: name}
+    class_names = {cat['id']: cat['name'] for cat in coco_data['categories']}
+    return class_names
+
+def validation(num_classes, proportion):
 
     project_root = Path(__file__).parent.parent 
     config_path = project_root / "config" / "config.yaml"
@@ -38,18 +47,33 @@ def validation(num_classes, proportion, score_threshold):
 
     img_dir = project_root / config["data"]["images"]["test"]["img_dir"]
     ann_file = project_root / config["data"]["annotations"]["test"]["ann_file"]
+
+    # Récupérer les noms des classes
+    class_names = get_class_names(ann_file)
+
     my_transform = CocoToFasterRCNN()
     dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform, subset_ratio=proportion)
 
+    model_path = "../models/faster_rcnn.pt"
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model not found: {model_path}")
+    
     model = get_model(num_classes + 1)
-    model.load_state_dict(torch.load("../models/faster_rcnn.pt", map_location=device))
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.to(device)
     model.eval() 
 
-    validation_loader = DataLoader(dataset, batch_size=config["training"]["batch_size"], shuffle=True, collate_fn=collate_fn, num_workers=2, pin_memory=True)
+    validation_loader = DataLoader(dataset,
+                                    batch_size=config["training"]["batch_size"],
+                                    shuffle=False,
+                                    collate_fn=collate_fn,
+                                    num_workers=2,
+                                    pin_memory=True
+                                )
 
-    metric1 = IntersectionOverUnion()
-    metric2 = MeanAveragePrecision(box_format='xyxy')
+    metric = MeanAveragePrecision(box_format='xyxy',
+                                  class_metrics =True,
+                                  )
 
     results_detailed = []
     with torch.no_grad():
@@ -58,22 +82,20 @@ def validation(num_classes, proportion, score_threshold):
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-            preds = model(images)
+            predictions = model(images)
 
-            preds_filtered = []
-            for pred in preds:
-                
-                mask = pred['scores'] > score_threshold
-                preds_filtered.append({
-                    'boxes': pred['boxes'][mask],
-                    'labels': pred['labels'][mask],
-                    'scores': pred['scores'][mask]
+            preds_metrics = []
+            for pred in predictions:  
+                preds_metrics.append({
+                    'boxes': pred['boxes'],
+                    'labels': pred['labels'],
+                    'scores': pred['scores']
                 })
             
-            metric1.update(preds_filtered, targets)
-            metric2.update(preds_filtered, targets)
+            metric.update(preds_metrics, targets)
 
-            for target, pred in zip(targets, preds_filtered):
+
+            for target, pred in zip(targets, preds_metrics):
                 results_detailed.append({
                     "ground_truth": {
                         "boxes": target["boxes"].tolist(),
@@ -86,27 +108,24 @@ def validation(num_classes, proportion, score_threshold):
                     }
                 })
 
-    final_IoU = metric1.compute()
-    final_results = metric2.compute()
-    print(final_IoU)
+    final_results = metric.compute()
     print(final_results)
 
     json_results = {
-        "global_metrics" :{
-            "mAP_metrics": prepare_for_json(final_results),
-            "IoU_metrics": prepare_for_json(final_IoU)
-            },
+        "global_metrics" : prepare_for_json(final_results),
+        "class_names": class_names,
         "detailed_results" : results_detailed
     }
+
     os.makedirs("../outputs", exist_ok=True)
     with open("../outputs/test_results.json", "w", encoding="utf-8") as file:
         json.dump(json_results, file, indent=2, ensure_ascii=False)
+    print("Results saved")
 
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--num_classes', type=int, default=10, help='number of classes')
     parser.add_argument('--proportion', type=float, default=1.0, help='proportion of the original dataset')
-    parser.add_argument('--score_threshold', type=float, default=0.05, help='threshold for box we eliminate')
     args = parser.parse_args()
-    validation(args.num_classes, args.proportion, args.score_threshold)
+    validation(args.num_classes, args.proportion)
