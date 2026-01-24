@@ -161,7 +161,10 @@ def main(num_classes, num_epochs, proportion):
 
     # Optimizer
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=config["training"]["learning_rate"], 
+    #optimizer = torch.optim.SGD(params, lr=config["training"]["learning_rate"], 
+                               #momentum=config["training"]["momentum"], 
+                               #weight_decay=config["training"]["weight_decay"])
+    optimizer = torch.optim.AdamW(params, lr=config["training"]["learning_rate"], 
                                momentum=config["training"]["momentum"], 
                                weight_decay=config["training"]["weight_decay"])
 
