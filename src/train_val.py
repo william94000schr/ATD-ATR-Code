@@ -164,9 +164,11 @@ def main(num_classes, num_epochs, proportion):
     #optimizer = torch.optim.SGD(params, lr=config["training"]["learning_rate"], 
                                #momentum=config["training"]["momentum"], 
                                #weight_decay=config["training"]["weight_decay"])
-    optimizer = torch.optim.AdamW(params, lr=config["training"]["learning_rate"], 
-                               momentum=config["training"]["momentum"], 
-                               weight_decay=config["training"]["weight_decay"])
+    optimizer = torch.optim.AdamW(
+        params, 
+        lr=config["training"]["learning_rate"], 
+        weight_decay=config["training"]["weight_decay"]
+    )
 
     # Mixed precision
     use_amp = torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 7
