@@ -161,13 +161,23 @@ def main(num_classes, num_epochs, proportion):
 
     # Optimizer
     params = [p for p in model.parameters() if p.requires_grad]
-    #optimizer = torch.optim.SGD(params, lr=config["training"]["learning_rate"], 
-                               #momentum=config["training"]["momentum"], 
-                               #weight_decay=config["training"]["weight_decay"])
-    optimizer = torch.optim.AdamW(
-        params, 
-        lr=config["training"]["learning_rate"], 
-        weight_decay=config["training"]["weight_decay"]
+    optimizer = torch.optim.SGD(params, lr=config["training"]["learning_rate"], 
+                                momentum=config["training"]["momentum"], 
+                                weight_decay=config["training"]["weight_decay"]
+                                )
+    # optimizer = torch.optim.AdamW(
+        # params, 
+        # lr=config["training"]["learning_rate"], 
+        # weight_decay=config["training"]["weight_decay"]
+    #)
+
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, 
+        mode='min', 
+        factor=0.5, 
+        patience=3,
+        verbose=True,
+        min_lr=1e-6
     )
 
     # Mixed precision
@@ -190,6 +200,7 @@ def main(num_classes, num_epochs, proportion):
         
         # Validation
         val_result = validate_one_epoch(model, val_loader, device, use_amp, epoch)
+        scheduler.step(val_result['loss_total'])
         
         # Affichage
         print(f"\n--- Epoch {epoch} Results ---")
