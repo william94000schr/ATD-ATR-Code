@@ -60,7 +60,7 @@ def validation(num_classes, proportion):
     
     model = get_model(num_classes + 1)
     model.load_state_dict(torch.load(model_path, map_location=device))
-    model.roi_heads.nms_thresh = 0.3
+    #model.roi_heads.nms_thresh = 0.3
     model.to(device)
     model.eval() 
 
