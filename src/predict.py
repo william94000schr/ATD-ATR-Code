@@ -15,7 +15,7 @@ def collate_fn(batch):
     return tuple(zip(*batch))
 
 def predict(num_classes, num_images, image_path, threshold, proportion):
-
+    my_transform = CocoToFasterRCNN()
     if image_path:
         # Charger l'image unique
         orig_image = Image.open(image_path).convert("RGB")
