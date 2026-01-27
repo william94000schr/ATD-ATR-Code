@@ -108,4 +108,4 @@ if __name__ == "__main__":
     parser.add_argument('--threshold', type=float, default=0.5, help='threshold of detection')
     parser.add_argument('--proportion', type=float, default=1.0, help='proportion of the original dataset')
     args = parser.parse_args()
-    predict(args.num_classes, args.num_images, args.threshold, args.proportion)
+    predict(args.num_classes, args.num_images, args.image_path, args.threshold, args.proportion)
