@@ -8,6 +8,7 @@ from transforms import CocoToFasterRCNN
 from dataset import SAR_ATR_Dataset
 from model import get_model
 from PIL import Image, ImageDraw
+from torchvision import transforms
 
 
 def collate_fn(batch):
@@ -15,11 +16,28 @@ def collate_fn(batch):
     return tuple(zip(*batch))
 
 def predict(num_classes, num_images, image_path, threshold, proportion):
+
+    project_root = Path(__file__).parent.parent 
+    with open("../config/config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
     my_transform = CocoToFasterRCNN()
+
+    model = get_model(num_classes + 1)
+    model.load_state_dict(torch.load("../models/faster_rcnn.pt", map_location=device))
+    model.to(device)
+    model.eval() 
+
     if image_path:
         # Charger l'image unique
         orig_image = Image.open(image_path).convert("RGB")
-        image_tensor = my_transform(orig_image, None)[0]  # Juste l'image, pas de target
+        # Transformation simple pour l'inférence
+        transform = transforms.Compose([transforms.ToTensor(),])
+        image_tensor = transform(orig_image)
+
+        os.makedirs("../outputs/predictions", exist_ok=True)
         
         with torch.no_grad():
             prediction = model([image_tensor.to(device)])[0]
@@ -36,24 +54,13 @@ def predict(num_classes, num_images, image_path, threshold, proportion):
         
             orig_image.save(f"../outputs/predictions/single_pred.png")
     else:
-
-        project_root = Path(__file__).parent.parent 
-        with open("../config/config.yaml", 'r') as stream:
-            config = yaml.safe_load(stream)
-
-        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        
+        os.makedirs("../outputs/predictions", exist_ok=True)
 
         img_dir = project_root / config["data"]["images"]["test"]["img_dir"]
         ann_file = project_root / config["data"]["annotations"]["test"]["ann_file"]
-        my_transform = CocoToFasterRCNN()
         dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform, subset_ratio=proportion)
 
-        model = get_model(num_classes + 1)
-        model.load_state_dict(torch.load("../models/faster_rcnn.pt", map_location=device))
-        model.to(device)
-        model.eval() 
-        
-        os.makedirs("../outputs/predictions", exist_ok=True)
         indices = random.sample(range(len(dataset)), num_images)
         with torch.no_grad():
             for idx in indices:
