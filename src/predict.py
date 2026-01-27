@@ -49,7 +49,7 @@ def predict(num_classes, num_images, threshold, proportion):
             for box, label in zip(target['boxes'], target['labels']):
                 b = box.numpy()
                 draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="green", width=2)
-                text = label.item()
+                text = str(label.item())
                 bbox = draw.textbbox((b[0], b[1] - 15), text)
                 draw.rectangle(bbox, fill="green")
                 draw.text((b[0], b[1] - 15), text, fill="white")
