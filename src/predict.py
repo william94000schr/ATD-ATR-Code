@@ -45,11 +45,14 @@ def predict(num_classes, num_images, threshold, proportion):
             draw = ImageDraw.Draw(orig_image)
 
 
-            #print("Vérité Terrain:")
+            print("Vérité Terrain:")
             for box, label in zip(target['boxes'], target['labels']):
                 b = box.numpy()
                 draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="green", width=2)
-                draw.text((b[0], b[3]), f"GT:{label.item()}", fill="green")
+                text = label.item()
+                bbox = draw.textbbox((b[0], b[1] - 15), text)
+                draw.rectangle(bbox, fill="green")
+                draw.text((b[0], b[1] - 15), text, fill="white")
                 print(f"  Classe: {label.item()}\n")
 
             print("Prédictions du modèle:")
@@ -57,7 +60,10 @@ def predict(num_classes, num_images, threshold, proportion):
                 if score > threshold: 
                     b = box.cpu().numpy()
                     draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="red", width=3)
-                    draw.text((b[0], b[1]), f"Cl:{label.item()} {score:.2f}", fill="red")
+                    text = f"{label.item()} : {score:.2f} %"
+                    bbox = draw.textbbox((b[0], b[1] - 15), text)
+                    draw.rectangle(bbox, fill="red")
+                    draw.text((b[0], b[1] - 15), text, fill="white")
                     print(f"Classe: {label.item()} | Score: {score:.2f}\n")
 
 
@@ -71,7 +77,7 @@ def predict(num_classes, num_images, threshold, proportion):
                 if score > threshold: 
                     print(f"Classe: {label.item()} | Score: {score:.2f}\n")
 
-            to_pil_image(img_with_GT_and_preds).save(f"../outputs/predictions/pred_{idx}.png")
+            to_pil_image(orig_image).save(f"../outputs/predictions/pred_{idx}.png")
 
 
 
