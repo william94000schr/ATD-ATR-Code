@@ -38,7 +38,7 @@ def predict(num_classes, num_images, threshold, proportion):
     with torch.no_grad():
         for idx in indices:
             image_tensor, target = dataset[idx]
-            orig_image = dataset._load_image(dataset.ids[idx]) # c'est quoi ?
+            orig_image = dataset._load_image(dataset.ids[idx])
 
             #boxes
             prediction = model([image_tensor.to(device)])[0]
@@ -60,25 +60,26 @@ def predict(num_classes, num_images, threshold, proportion):
                 if score > threshold: 
                     b = box.cpu().numpy()
                     draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="red", width=3)
-                    text = f"{label.item()} : {score:.2f} %"
-                    bbox = draw.textbbox((b[0], b[1] - 15), text)
-                    draw.rectangle(bbox, fill="red")
-                    draw.text((b[0], b[1] - 15), text, fill="white")
+                    text2 = f"{label.item()} : {score:.2f} %"
+                    bbox2 = draw.textbbox((b[2], b[1] - 15), text2)
+                    draw.rectangle(bbox2, fill="red")
+                    draw.text((b[2], b[1] - 15), text2, fill="white")
                     print(f"Classe: {label.item()} | Score: {score:.2f}\n")
 
 
-            print(idx)
+            print(f"image {idx}")
             print("\nVérité Terrain:")
             for box, label in zip(target['boxes'], target['labels']):
-                print(f"  Classe: {label.item()}\n")
+                print(f"- Classe: {label.item()}\n")
 
             print("Prédictions du modèle:")
             for box, label, score in zip(prediction['boxes'], prediction['labels'], prediction['scores']):
                 if score > threshold: 
-                    print(f"Classe: {label.item()} | Score: {score:.2f}\n")
+                    print(f"- Classe: {label.item()} | Score: {score:.2f}\n")
 
             orig_image.save(f"../outputs/predictions/pred_{idx}.png")
-
+            print('-'*60)
+        
 
 
 if __name__ == "__main__":
