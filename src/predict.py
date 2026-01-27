@@ -77,7 +77,7 @@ def predict(num_classes, num_images, threshold, proportion):
                 if score > threshold: 
                     print(f"Classe: {label.item()} | Score: {score:.2f}\n")
 
-            to_pil_image(orig_image).save(f"../outputs/predictions/pred_{idx}.png")
+            orig_image.save(f"../outputs/predictions/pred_{idx}.png")
 
 
 
