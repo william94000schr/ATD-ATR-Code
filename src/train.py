@@ -139,7 +139,7 @@ def main(num_classes, num_epochs, proportion):
             "train": train_result
         })
 
-        if (epoch + 1) % 3 == 0:
+        if (epoch + 1) % 2 == 0:
             torch.save(model.state_dict(), f"../models/checkpoint_epoch{epoch+1}.pt")
 
     # Sauvegarde

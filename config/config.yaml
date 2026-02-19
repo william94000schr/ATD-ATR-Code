@@ -14,7 +14,7 @@ data:
       ann_file: "data/annotations/test.json"
 
 training:
-  batch_size: 32
+  batch_size: 16
   learning_rate: 0.0005
   momentum : 0.9
   weight_decay : 0.0005
