@@ -140,6 +140,7 @@ def main(num_classes, num_epochs, proportion):
         })
 
         if (epoch + 1) % 2 == 0:
+            os.makedirs("../models", exist_ok=True)
             torch.save(model.state_dict(), f"../models/checkpoint_epoch{epoch+1}.pt")
 
     # Sauvegarde
