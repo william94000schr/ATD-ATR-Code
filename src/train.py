@@ -139,6 +139,9 @@ def main(num_classes, num_epochs, proportion):
             "train": train_result
         })
 
+        if (epoch + 1) % 3 == 0:
+            torch.save(model.state_dict(), f"../models/checkpoint_epoch{epoch+1}.pt")
+
     # Sauvegarde
     os.makedirs("../outputs", exist_ok=True)
     with open("../outputs/train_results.json", "w", encoding="utf-8") as file:
