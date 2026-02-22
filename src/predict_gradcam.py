@@ -90,13 +90,12 @@ class FasterRCNNGradCAM:
             predictions  : dict avec boxes, labels, scores (filtrés)
             heatmaps     : liste de np.array (H, W) normalisés [0,1], un par détection
         """
-        self.model.train()  # IMPORTANT : eval() désactive les gradients dans certaines couches
-                            # mais on reste en mode inférence grâce à torch.no_grad() absent
+        self.model.eval()  # eval() pour que Faster RCNN accepte sans targets
 
-        image = image_tensor.unsqueeze(0).to(device)  # (1, C, H, W)
+        image = image_tensor.unsqueeze(0).to(device)
 
-        # Forward pass — PAS de torch.no_grad() pour garder le graphe de calcul
-        predictions = self.model(image)[0]
+        with torch.enable_grad():  # force les gradients même en eval()
+            predictions = self.model(image)[0]
 
         # Filtrer par seuil et classe cible
         keep = predictions['scores'] > threshold
