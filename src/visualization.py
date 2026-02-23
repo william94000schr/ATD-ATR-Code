@@ -21,7 +21,7 @@ def save_prediction(orig_image, preds, save_path, ground_truth=None, class_names
     draw = ImageDraw.Draw(image)
 
     if ground_truth is not None:
-        _draw_boxes(draw, ground_truth['boxes'], ground_truth['labels'], color="green", class_names=class_names)
+        _draw_boxes(draw, ground_truth['boxes'], ground_truth['labels'], color="green", class_names=class_names, text_below=True)
 
     _draw_boxes(draw, preds['boxes'], preds['labels'], preds['scores'], color="red", class_names=class_names)
     image.save(save_path)
@@ -58,7 +58,7 @@ def save_gradcam(orig_image, preds, heatmaps, save_path, ground_truth=None, clas
     img_left = orig_image.copy()
     draw = ImageDraw.Draw(img_left)
     if ground_truth is not None:
-        _draw_boxes(draw, ground_truth['boxes'], ground_truth['labels'], color="green", class_names=class_names)
+        _draw_boxes(draw, ground_truth['boxes'], ground_truth['labels'], color="green", class_names=class_names, text_below=True)
     _draw_boxes(draw, preds['boxes'], preds['labels'], preds['scores'], color="red", class_names=class_names)
     axes[0].imshow(img_left)
     axes[0].set_title("Detections", fontsize=10)
