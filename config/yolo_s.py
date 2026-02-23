@@ -146,7 +146,7 @@ class Exp(MyExp):
 
     def get_dataset(self, cache: bool = False, cache_type: str = "ram"):
         """Retourne le dataset d'entraînement custom (images .tif)."""
-        from src.dataset import RadarCOCODataset
+        from src.dataset_ import RadarCOCODataset
         from src.transform import RadarTrainTransform
 
         return RadarCOCODataset(
@@ -167,7 +167,7 @@ class Exp(MyExp):
 
     def get_eval_dataset(self, **kwargs):
         """Retourne le dataset d'évaluation custom."""
-        from src.dataset import RadarCOCODataset
+        from src.dataset_ import RadarCOCODataset
         from src.transform import RadarValTransform
 
         return RadarCOCODataset(
