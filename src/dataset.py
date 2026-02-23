@@ -1,16 +1,15 @@
 import os.path
 import random
 from pathlib import Path
-from typing import Any, Callable, Optional, Union
+from typing import Union
 
-import numpy as np
 import cv2
-from PIL import Image
+import numpy as np
 from pycocotools.coco import COCO
-from torchvision.datasets import VisionDataset
+from yolox.data.datasets import COCODataset
 
 
-class SAR_ATR_Dataset(VisionDataset):
+class SAR_ATR_Dataset(COCODataset):
     def __init__(
         self,
         root: Union[str, Path],
@@ -19,12 +18,22 @@ class SAR_ATR_Dataset(VisionDataset):
         subset_ratio: float = 1.0,
         img_size: tuple = (160, 160),
     ) -> None:
-        super().__init__(root, transforms=transforms)
+        # COCODataset.__init__ attend : data_dir, json_file, name, img_size
+        # On l'initialise avec des valeurs minimales puis on écrase
+        self.img_size = img_size  # requis par COCODataset avant super().__init__
+        super().__init__(
+            data_dir=str(root),
+            json_file=annFile,
+            name="",           # on gère les chemins nous-mêmes
+            img_size=img_size,
+            preproc=None,
+        )
+        # Surcharger avec notre propre chargement COCO
+        self.root = str(root)
         self.coco = COCO(annFile)
         self.ids = list(sorted(self.coco.imgs.keys()))
-        self.img_size = img_size
+        self._transforms = transforms
 
-        # Mapping category_id → index continu [0, N-1]
         self.class_ids = sorted(self.coco.getCatIds())
         self.cat_to_label = {
             cat_id: idx for idx, cat_id in enumerate(self.class_ids)
@@ -35,7 +44,6 @@ class SAR_ATR_Dataset(VisionDataset):
             random.seed(94)
             self.ids = random.sample(self.ids, n_samples)
 
-        # Pré-chargement des annotations (comme dans RadarCOCODataset)
         self.annotations = self._load_all_annotations()
 
     def _load_all_annotations(self):
@@ -44,7 +52,6 @@ class SAR_ATR_Dataset(VisionDataset):
             ann_ids = self.coco.getAnnIds(imgIds=img_id)
             anns = self.coco.loadAnns(ann_ids)
             img_info = self.coco.imgs[img_id]
-
             boxes = []
             for ann in anns:
                 if ann.get("ignore", 0):
@@ -54,7 +61,6 @@ class SAR_ATR_Dataset(VisionDataset):
                     continue
                 label = self.cat_to_label[ann["category_id"]]
                 boxes.append([x, y, x + w, y + h, label])
-
             annotations.append({
                 "img_id": img_id,
                 "file_name": img_info["file_name"],
@@ -65,36 +71,24 @@ class SAR_ATR_Dataset(VisionDataset):
         return annotations
 
     def _load_image(self, index: int) -> np.ndarray:
-        """Charge l'image grayscale et la convertit en (H, W, 3) uint8 pour YOLOX."""
         file_name = self.annotations[index]["file_name"]
         path = os.path.join(self.root, file_name)
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         if img is None:
             raise FileNotFoundError(f"Image introuvable : {path}")
-        # Répliquer sur 3 canaux → compatible YOLOX standard sans patch du stem
-        img = np.stack([img, img, img], axis=-1)  # (H, W, 3)
-        return img
+        return np.stack([img, img, img], axis=-1)  # (H, W, 3)
 
     def __getitem__(self, index: int):
-        """
-        Retourne (img, target, img_info, img_id) — format attendu par YOLOX.
-        """
-        if not isinstance(index, int):
-            raise ValueError(f"Index must be int, got {type(index)}")
-
         ann = self.annotations[index]
         img = self._load_image(index)
         target = ann["boxes"].copy()
         img_info = (ann["height"], ann["width"])
-
-        if self.transforms is not None:
-            img, target = self.transforms(img, target)
-
+        if self._transforms is not None:
+            img, target = self._transforms(img, target)
         return img, target, img_info, ann["img_id"]
 
     def __len__(self) -> int:
         return len(self.ids)
 
-    # Alias utilisé par certains évaluateurs YOLOX
     def pull_item(self, index: int):
         return self.__getitem__(index)
