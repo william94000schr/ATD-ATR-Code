@@ -34,7 +34,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Répertoire du projet (là où se trouve train_cluster.py)
-PROJECT_DIR="/scratch/students/$HOME/ATR_SAR"
+PROJECT_DIR="/scratch/students/$USER/ATR_SAR"
 
 # Chemin vers le dataset sur le stockage rapide BeeGFS (préférer /scratch/ à /home/)
 DATA_DIR="/scratch/student/$USER/SOC_40classes_coco/SOC_40classes_coco"
