@@ -222,15 +222,9 @@ def add_gaussian_noise(
 
 
 def normalize(img: np.ndarray) -> np.ndarray:
-    """
-    Normalise l'image uint8 (H, W, 1) → float32 (H, W, 1) dans [0, 1].
-    Puis duplique sur 3 canaux car le backbone YOLOX attend (H, W, 3).
-    → Retourne (H, W, 3) float32, compatible torchvision/YOLOX.
-    """
-    img_f = img.astype(np.float32) / 255.0
-    # Répétition sur 3 canaux pour compatibilité backbone
-    img_3c = np.repeat(img_f, 3, axis=2)
-    return img_3c
+    """Normalise (H, W, 1) uint8 → float32 dans [0, 1]. Garde 1 canal."""
+    return img.astype(np.float32) / 255.0
+    # Ne pas répliquer sur 3 canaux — le Focus attend le nombre de canaux réel
 
 
 # ── Transforms composites ─────────────────────────────────────────────────────
