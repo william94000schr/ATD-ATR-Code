@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class FasterRCNNGradCAM:
     """GradCAM for Faster RCNN ResNet50 FPN — targets backbone.body.layer4."""
 
-    def __init__(self, model, target_layer_name="backbone.body.layer4"):
+    def __init__(self, model, target_layer_name="backbone.body.layer3"):
         self.model = model
         self.activations = None
         self.gradients = None
