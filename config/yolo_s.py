@@ -85,7 +85,7 @@ class Exp(MyExp):
         self.model.head.initialize_biases(1e-2)
         return self.model
 
-    def get_dataset(self, cache=False, cache_type="ram", **kwargs):
+    def get_dataset(self, **kwargs):
         from src.dataset import SAR_ATR_Dataset
         from src.transform import RadarTrainTransform
 
