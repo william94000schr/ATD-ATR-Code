@@ -27,7 +27,7 @@ class Exp(MyExp):
         self.num_classes = 50
         self.input_size = (160, 160)
         self.test_size = (160, 160)
-        self.multiscale_range = 1
+        self.multiscale_range = 0
 
         self.data_dir = "data/SOC_50classes_coco/SOC_50classes_coco"
         self.train_ann = "train.json"
@@ -127,7 +127,10 @@ class Exp(MyExp):
         )
 
     def get_data_loader(self, batch_size, is_distributed, no_aug=False, cache_img=None):
-        from yolox.data import DataLoader, InfiniteSampler, worker_init_reset_seed
+        # Use standard PyTorch DataLoader to avoid YOLOX's YoloBatchSampler bug
+        # (BatchSampler.__init__() got unexpected keyword argument 'input_dimension' on PyTorch>=2.x)
+        from torch.utils.data import DataLoader as TorchDataLoader
+        from yolox.data import InfiniteSampler
         from yolox.utils import wait_for_the_master
         from src.dataset import SAR_ATR_Dataset
         from src.transform import RadarTrainTransform
@@ -149,10 +152,26 @@ class Exp(MyExp):
 
         sampler = InfiniteSampler(len(dataset), seed=0)
 
-        dataloader = DataLoader(
+        dataloader = TorchDataLoader(
             dataset,
             batch_size=batch_size,
             sampler=sampler,
+            num_workers=self.data_num_workers,
+            pin_memory=True,
+            collate_fn=self._collate_fn,
+        )
+        return dataloader
+
+    def get_eval_loader(self, batch_size, is_distributed, testdev=False, legacy=False):
+        # Use standard PyTorch DataLoader for the same reason as get_data_loader
+        from torch.utils.data import DataLoader as TorchDataLoader
+
+        val_dataset = self.get_eval_dataset()
+
+        dataloader = TorchDataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
             num_workers=self.data_num_workers,
             pin_memory=True,
             collate_fn=self._collate_fn,
