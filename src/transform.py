@@ -53,8 +53,7 @@ def _resize_image_and_boxes(
     src_h, src_w = img.shape[:2]
     th, tw = target_size
 
-    img_resized = cv2.resize(img.squeeze(-1), (tw, th), interpolation=cv2.INTER_LINEAR)
-    img_resized = img_resized[:, :, np.newaxis]
+    img_resized = cv2.resize(img, (tw, th), interpolation=cv2.INTER_LINEAR)
 
     if len(boxes) > 0:
         scale_x = tw / src_w
@@ -143,7 +142,7 @@ def random_affine(
 
     # Application à l'image
     img_out = cv2.warpAffine(
-        img.squeeze(-1),
+        img,
         M_rot,
         (w, h),
         flags=cv2.INTER_LINEAR,
@@ -158,7 +157,6 @@ def random_affine(
         borderMode=cv2.BORDER_CONSTANT,
         borderValue=0,
     )
-    img_out = img_out[:, :, np.newaxis]
 
     # Application aux boîtes via transformation des 4 coins
     if len(boxes) > 0:
