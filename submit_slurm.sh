@@ -76,7 +76,7 @@ module load gcc/12.2.0
 # ── Activer uv et installer les dépendances ───────────────────────────────────
 curl -LsSf https://astral.sh/uv/install.sh | sh
 cd "$PROJECT_DIR" || { echo "Répertoire non trouvé : $PROJECT_DIR"; exit 1; }
-"$HOME/.local/bin/uv" sync --no-dev
+"$HOME/.local/bin/uv" sync --no-build --no-dev
 
 # yolox ne peut pas être dans pyproject.toml car son setup.py importe torch
 # lors de la résolution des dépendances (avant que torch soit installé).
