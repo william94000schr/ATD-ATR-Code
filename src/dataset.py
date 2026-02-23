@@ -19,11 +19,13 @@ class SAR_ATR_Dataset(COCODataset):
         img_size: tuple = (160, 160),
     ) -> None:
         # COCODataset.__init__ attend : data_dir, json_file, name, img_size
-        # On l'initialise avec des valeurs minimales puis on écrase
+        # YOLOX construit : os.path.join(data_dir, "annotations", json_file)
+        # Il faut donc : data_dir = parent du dossier annotations, json_file = nom du fichier seul
+        ann_path = Path(annFile)
         self.img_size = img_size  # requis par COCODataset avant super().__init__
         super().__init__(
-            data_dir=str(root),
-            json_file=annFile,
+            data_dir=str(ann_path.parent.parent),  # dossier contenant annotations/
+            json_file=ann_path.name,               # ex: train.json
             name="",           # on gère les chemins nous-mêmes
             img_size=img_size,
             preproc=None,
