@@ -91,6 +91,12 @@ def parse_args() -> argparse.Namespace:
         default="yolox_radar_detection",
         help="Nom de l'expérience MLflow",
     )
+    parser.add_argument(
+        "--cache",
+        type=str,
+        default=None,
+        help="Cache images en RAM ou disque (None, 'ram', 'disk')",
+    )
     return parser.parse_args()
 
 
