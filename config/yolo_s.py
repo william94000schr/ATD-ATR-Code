@@ -194,15 +194,16 @@ class Exp(MyExp):
         imgs = torch.from_numpy(imgs).permute(0, 3, 1, 2)     # (B, C, H, W)
         imgs = imgs.float()
 
-        # Convertir les boxes xyxy → cxcywh : YOLOX attend ce format dans get_losses
-        # (get_in_boxes_info et bboxes_iou utilisent tous deux cx±w/2, cy±h/2)
-        def xyxy_to_cxcywh(boxes):
-            """[x1, y1, x2, y2, cls] → [cx, cy, w, h, cls]"""
-            out = boxes.copy()
-            out[:, 0] = (boxes[:, 0] + boxes[:, 2]) / 2  # cx
-            out[:, 1] = (boxes[:, 1] + boxes[:, 3]) / 2  # cy
-            out[:, 2] = boxes[:, 2] - boxes[:, 0]         # w
-            out[:, 3] = boxes[:, 3] - boxes[:, 1]         # h
+        # Convertir les boxes [x1, y1, x2, y2, cls] → [cls, cx, cy, w, h]
+        # YOLOXHead.get_losses attend : labels[..., 0]=classe, labels[..., 1:5]=cx,cy,w,h
+        def xyxy_to_cls_cxcywh(boxes):
+            """[x1, y1, x2, y2, cls] → [cls, cx, cy, w, h]"""
+            out = np.zeros_like(boxes)
+            out[:, 0] = boxes[:, 4]                        # cls  (doit être en premier)
+            out[:, 1] = (boxes[:, 0] + boxes[:, 2]) / 2   # cx
+            out[:, 2] = (boxes[:, 1] + boxes[:, 3]) / 2   # cy
+            out[:, 3] = boxes[:, 2] - boxes[:, 0]          # w
+            out[:, 4] = boxes[:, 3] - boxes[:, 1]          # h
             return out
 
         # Padder les targets à la même taille
@@ -210,6 +211,6 @@ class Exp(MyExp):
         padded_targets = torch.zeros(len(targets), max(max_boxes, 1), 5)
         for i, t in enumerate(targets):
             if len(t) > 0:
-                padded_targets[i, :len(t)] = torch.from_numpy(xyxy_to_cxcywh(t))
+                padded_targets[i, :len(t)] = torch.from_numpy(xyxy_to_cls_cxcywh(t))
 
         return imgs, padded_targets, img_infos, img_ids
