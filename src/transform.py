@@ -222,10 +222,8 @@ def add_gaussian_noise(
 
 
 def normalize(img: np.ndarray) -> np.ndarray:
-    """Normalise (H, W, 1) uint8 → float32 dans [0, 1]. Garde 1 canal."""
+    """Normalise (H, W, 3) uint8 → float32 dans [0, 1]."""
     return img.astype(np.float32) / 255.0
-    # Ne pas répliquer sur 3 canaux — le Focus attend le nombre de canaux réel
-
 
 # ── Transforms composites ─────────────────────────────────────────────────────
 

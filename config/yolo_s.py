@@ -78,26 +78,6 @@ class Exp(MyExp):
         if getattr(self, "model", None) is None:
             in_channels = [256, 512, 1024]
             backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
-
-            # Focus fait space-to-depth : (C, H, W) → (C*4, H/2, W/2)
-            # Avec 1 canal grayscale → 4 canaux en entrée du stem conv
-            old_conv = backbone.backbone.stem.conv.conv  # nn.Conv2d interne du Focus
-            new_conv = nn.Conv2d(
-                in_channels=4,                      # 1 canal × 4 (space-to-depth)
-                out_channels=old_conv.out_channels,
-                kernel_size=old_conv.kernel_size,
-                stride=old_conv.stride,
-                padding=old_conv.padding,
-                bias=old_conv.bias is not None,
-            )
-            with __import__("torch").no_grad():
-                # Moyenne sur les 12 canaux RGB groupés par 4
-                new_conv.weight.copy_(
-                    old_conv.weight.reshape(old_conv.out_channels, 3, 4, *old_conv.kernel_size[0:1]*2)
-                    .mean(dim=1)
-                )
-            backbone.backbone.stem.conv.conv = new_conv
-
             head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act)
             self.model = YOLOX(backbone, head)
 

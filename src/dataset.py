@@ -65,13 +65,15 @@ class SAR_ATR_Dataset(VisionDataset):
         return annotations
 
     def _load_image(self, index: int) -> np.ndarray:
-        """Charge l'image en grayscale → (H, W, 1) uint8."""
+        """Charge l'image grayscale et la convertit en (H, W, 3) uint8 pour YOLOX."""
         file_name = self.annotations[index]["file_name"]
         path = os.path.join(self.root, file_name)
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         if img is None:
             raise FileNotFoundError(f"Image introuvable : {path}")
-        return img[:, :, np.newaxis]
+        # Répliquer sur 3 canaux → compatible YOLOX standard sans patch du stem
+        img = np.stack([img, img, img], axis=-1)  # (H, W, 3)
+        return img
 
     def __getitem__(self, index: int):
         """
