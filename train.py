@@ -46,8 +46,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--experiment-name", type=str, default="yolox_radar_detection")
     parser.add_argument("--occupy", action="store_true", default=False,
                         help="Pré-allouer toute la VRAM GPU")
-    parser.add_argument("--logger", type=str, default=None,
-                        help="Logger backend (tensorboard, wandb, ou None)")
+    parser.add_argument("--logger", type=str, default="tensorboard",
+                        help="Logger backend (tensorboard ou wandb)")
     parser.add_argument("--start-epoch", type=int, default=None,
                         help="Epoch de départ pour le resume")
     parser.add_argument("opts", nargs=argparse.REMAINDER, default=None,
