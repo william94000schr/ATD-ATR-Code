@@ -80,7 +80,7 @@ class Exp(MyExp):
             backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
 
             # BaseConv contient une nn.Conv2d dans .conv
-            old_conv = backbone.backbone.stem.conv  # c'est le nn.Conv2d réel
+            old_conv = backbone.backbone.stem.conv.conv  # c'est le nn.Conv2d réel
             new_conv = nn.Conv2d(
                 in_channels=1,
                 out_channels=old_conv.out_channels,
