@@ -117,7 +117,7 @@ def run_on_dataset(num_images, model, device, threshold, explainability, class_n
 def main():
     parser = argparse.ArgumentParser(description="Faster RCNN inference")
     parser.add_argument('--image_path',     type=str,   default=None,  help='Path to a single image')
-    parser.add_argument('--num_images',     type=int,   default=5,     help='Number of images from test dataset')
+    parser.add_argument('--num_images',     type=int,   default=1,     help='Number of images from test dataset')
     parser.add_argument('--threshold',      type=float, default=0.5,   help='Detection score threshold')
     parser.add_argument('--explainability', action='store_true',       help='Enable GradCAM visualization')
     args = parser.parse_args()
