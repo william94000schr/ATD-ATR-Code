@@ -74,10 +74,10 @@ module load gcc/12.2.0
 # module load python/3.10
 
 # ── Activer uv et installer les dépendances ───────────────────────────────────
-source "$HOME/.local/bin/env"           # initialise uv (installé en user sur PANDO)
-cd "$PROJECT_DIR" || { echo "Répertoire non trouvé : $PROJECT_DIR"; exit 1; }
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source "$HOME/.local/bin/env"
 
-# Installe toutes les dépendances verrouillées dans uv.lock (torch, numpy, etc.)
+cd "$PROJECT_DIR" || { echo "Répertoire non trouvé : $PROJECT_DIR"; exit 1; }
 uv sync --no-dev
 
 # yolox ne peut pas être dans pyproject.toml car son setup.py importe torch
