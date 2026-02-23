@@ -125,3 +125,57 @@ class Exp(MyExp):
             num_classes=self.num_classes,
             testdev=testdev,
         )
+
+    def get_data_loader(self, batch_size, is_distributed, no_aug=False, cache_img=None):
+        from yolox.data import DataLoader, InfiniteSampler, worker_init_reset_seed
+        from yolox.utils import wait_for_the_master
+        from src.dataset import SAR_ATR_Dataset
+        from src.transform import RadarTrainTransform
+
+        with wait_for_the_master():
+            dataset = SAR_ATR_Dataset(
+                root=str(Path(self.data_dir) / self.train_img_dir),
+                annFile=str(Path(self.data_dir) / "annotations" / self.train_ann),
+                transforms=RadarTrainTransform(
+                    img_size=self.input_size,
+                    flip_prob=self.flip_prob,
+                    degrees=self.degrees,
+                    translate=self.translate,
+                    scale=self.scale,
+                    shear=self.shear,
+                ),
+                img_size=self.input_size,
+            )
+
+        sampler = InfiniteSampler(len(dataset), seed=0)
+
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            sampler=sampler,
+            num_workers=self.data_num_workers,
+            pin_memory=True,
+            collate_fn=self._collate_fn,
+        )
+        return dataloader
+
+    @staticmethod
+    def _collate_fn(batch):
+        import torch
+        import numpy as np
+
+        imgs, targets, img_infos, img_ids = zip(*batch)
+
+        # Convertir les images en tensor (B, C, H, W)
+        imgs = np.stack(imgs, axis=0)                          # (B, H, W, C)
+        imgs = torch.from_numpy(imgs).permute(0, 3, 1, 2)     # (B, C, H, W)
+        imgs = imgs.float()
+
+        # Padder les targets à la même taille
+        max_boxes = max(len(t) for t in targets)
+        padded_targets = torch.zeros(len(targets), max(max_boxes, 1), 5)
+        for i, t in enumerate(targets):
+            if len(t) > 0:
+                padded_targets[i, :len(t)] = torch.from_numpy(t)
+
+        return imgs, padded_targets, img_infos, img_ids
