@@ -29,6 +29,7 @@ dependencies = [
     "tensorboard>=2.0",       # backend logger du Trainer YOLOX (--logger tensorboard)
     "numpy>=2.2.6",
     "mlflow>=3.10.0",
+    "pyarrow<13.0",
 ]
 
 [dependency-groups]
