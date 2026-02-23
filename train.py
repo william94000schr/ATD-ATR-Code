@@ -97,6 +97,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Cache images en RAM ou disque (None, 'ram', 'disk')",
     )
+    parser.add_argument(
+        "--occupy",
+        action="store_true",
+        default=False,
+        help="Pré-allouer toute la VRAM GPU avant l'entraînement",
+    )
     return parser.parse_args()
 
 
