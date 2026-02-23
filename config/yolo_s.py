@@ -29,7 +29,7 @@ class Exp(MyExp):
         self.test_size = (160, 160)
         self.multiscale_range = 1
 
-        self.data_dir = "data/SOC_50classes_coco"
+        self.data_dir = "data/SOC_50classes_coco/SOC_50classes_coco"
         self.train_ann = "train.json"
         self.val_ann = "test.json"
         self.train_img_dir = "images/train"
