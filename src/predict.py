@@ -40,7 +40,7 @@ def load_model(device):
     model = get_model(num_classes)
     model.load_state_dict(checkpoint)
     model.to(device)
-    
+    model.eval()
     print(f"Model loaded — {num_classes} classes (including background)")
     return model
 
