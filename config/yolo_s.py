@@ -46,6 +46,7 @@ class Exp(MyExp):
         self.enable_mixup = False
 
         self.max_epoch = 100
+        self.no_aug_epochs = 0   # pas de mosaic/mixup donc phase "no aug" inutile
         self.train_batch_size = 32
         self.eval_batch_size = 32
         self.data_num_workers = 2
@@ -160,6 +161,9 @@ class Exp(MyExp):
             pin_memory=True,
             collate_fn=self._collate_fn,
         )
+        # Le Trainer YOLOX appelle close_mosaic() sur le DataLoader en fin de warmup.
+        # Comme on n'utilise pas de mosaic, c'est un no-op.
+        dataloader.close_mosaic = lambda: None
         return dataloader
 
     def get_eval_loader(self, batch_size, is_distributed, testdev=False, legacy=False):
