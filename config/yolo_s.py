@@ -79,10 +79,11 @@ class Exp(MyExp):
             in_channels = [256, 512, 1024]
             backbone = YOLOPAFPN(self.depth, self.width, in_channels=in_channels, act=self.act)
 
-            stem = backbone.backbone.stem
-            old_conv = stem.conv
+            # BaseConv contient une nn.Conv2d dans .conv
+            old_conv = backbone.backbone.stem.conv  # c'est le nn.Conv2d réel
             new_conv = nn.Conv2d(
                 in_channels=1,
+                out_channels=old_conv.out_channels,
                 kernel_size=old_conv.kernel_size,
                 stride=old_conv.stride,
                 padding=old_conv.padding,
@@ -90,7 +91,8 @@ class Exp(MyExp):
             )
             with __import__("torch").no_grad():
                 new_conv.weight.copy_(old_conv.weight.mean(dim=1, keepdim=True))
-            stem.conv = new_conv
+            # Remplacer le nn.Conv2d interne du BaseConv
+            backbone.backbone.stem.conv = new_conv
 
             head = YOLOXHead(self.num_classes, self.width, in_channels=in_channels, act=self.act)
             self.model = YOLOX(backbone, head)
