@@ -3,18 +3,15 @@ name = "atr-sar"
 version = "0.1.0"
 description = "YOLOX-S SAR target detection"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     # ── Deep learning ────────────────────────────────────────────────────────
-    "torch>=1.13,<2.1",  # compatibles manylinux_2_17
-    "torchvision>=0.16.0",    # requis par yolox (torchvision.ops.nms)
-
+    "torch==2.0.1",
+    "torchvision==0.15.2",    # requis par yolox (torchvision.ops.nms)
     # ── Données ──────────────────────────────────────────────────────────────
-    "numpy>=2.4.2",
     "opencv-python>=4.13.0.92",
     "pillow>=12.1.1",
     "pycocotools>=2.0.11",
-
     # ── Dépendances runtime de yolox (installé séparément via --no-deps) ────
     # yolox==0.3.0 setup.py importe torch à la compilation, ce qui empêche
     # uv lock de tourner sans torch pré-installé. On liste ses deps ici et
@@ -28,10 +25,10 @@ dependencies = [
     "psutil>=5.9",
     "scikit-image>=0.21",
     "pyyaml>=6.0",
-
     # ── Logging entraînement ─────────────────────────────────────────────────
     "tensorboard>=2.0",       # backend logger du Trainer YOLOX (--logger tensorboard)
-    "mlflow>=2.0",            # utilisé par evaluate.py
+    "numpy>=2.2.6",
+    "mlflow>=3.10.0",
 ]
 
 [dependency-groups]
