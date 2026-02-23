@@ -83,7 +83,6 @@ class Exp(MyExp):
             old_conv = stem.conv
             new_conv = nn.Conv2d(
                 in_channels=1,
-                out_channels=old_conv.out_channels,
                 kernel_size=old_conv.kernel_size,
                 stride=old_conv.stride,
                 padding=old_conv.padding,
