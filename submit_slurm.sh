@@ -75,15 +75,13 @@ module load gcc/12.2.0
 
 # ── Activer uv et installer les dépendances ───────────────────────────────────
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source "$HOME/.local/bin/env"
-
 cd "$PROJECT_DIR" || { echo "Répertoire non trouvé : $PROJECT_DIR"; exit 1; }
-uv sync --no-dev
+"$HOME/.local/bin/uv" sync --no-dev
 
 # yolox ne peut pas être dans pyproject.toml car son setup.py importe torch
 # lors de la résolution des dépendances (avant que torch soit installé).
 # On l'installe séparément sans ses propres deps (déjà listées dans pyproject.toml).
-uv pip install --no-deps yolox==0.3.0
+"$HOME/.local/bin/uv" pip install --no-deps yolox==0.3.0
 
 # ── Créer les répertoires nécessaires ────────────────────────────────────────
 mkdir -p logs "$OUTPUT_DIR"
@@ -98,7 +96,7 @@ echo "  Train : $(ls "$DATA_DIR/images/train" | wc -l) images"
 echo "  Test  : $(ls "$DATA_DIR/images/test"  | wc -l) images"
 
 # ── Lancement de l'entraînement ───────────────────────────────────────────────
-uv run python train_cluster.py \
+"$HOME/.local/bin/uv" run python train_cluster.py \
     --config     config/yolo_s.py \
     --data-dir   "$DATA_DIR" \
     --output-dir "$OUTPUT_DIR" \
