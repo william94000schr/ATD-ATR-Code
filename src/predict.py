@@ -1,118 +1,135 @@
 import os
+import json
+import random
+import argparse
 from pathlib import Path
+
 import torch
 import yaml
-import argparse
-import random
+from PIL import Image
+from torchvision import transforms
+
 from transforms import CocoToFasterRCNN
 from dataset import SAR_ATR_Dataset
 from model import get_model
-from PIL import Image, ImageDraw
-from torchvision import transforms
+from visualization import save_prediction, save_gradcam
+from gradcam import FasterRCNNGradCAM
 
 
-def collate_fn(batch):
+OUTPUT_DIR = "../outputs/predictions"
 
-    return tuple(zip(*batch))
 
-def predict(num_classes, num_images, image_path, threshold, proportion):
+def load_config():
+    with open("../config/config.yaml", 'r') as f:
+        return yaml.safe_load(f)
 
-    project_root = Path(__file__).parent.parent 
-    with open("../config/config.yaml", 'r') as stream:
-        config = yaml.safe_load(stream)
 
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+def load_class_names():
+    path = "../config/classes.json"
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return json.load(f)
+    return None
 
-    my_transform = CocoToFasterRCNN()
 
-    model = get_model(num_classes + 1)
+def load_model(device):
+    model = get_model(None)  # num_classes inferred from checkpoint
     model.load_state_dict(torch.load("../models/faster_rcnn.pt", map_location=device))
     model.to(device)
-    model.eval() 
+    num_classes = model.roi_heads.box_predictor.cls_score.out_features
+    print(f"Model loaded — {num_classes} classes (including background)")
+    return model
 
-    if image_path:
-        # Charger l'image unique
-        orig_image = Image.open(image_path).convert("RGB")
-        # Transformation simple pour l'inférence
-        transform = transforms.Compose([transforms.ToTensor(),])
-        image_tensor = transform(orig_image)
 
-        os.makedirs("../outputs/predictions", exist_ok=True)
-        
-        with torch.no_grad():
-            prediction = model([image_tensor.to(device)])[0]
-            draw = ImageDraw.Draw(orig_image)
-            
-            for box, label, score in zip(prediction['boxes'], prediction['labels'], prediction['scores']):
-                if score > threshold: 
-                    b = box.cpu().numpy()
-                    draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="red", width=3)
-                    text2 = f"{label.item()} : {score:.2f} %"
-                    bbox2 = draw.textbbox((b[2], b[1] - 15), text2)
-                    draw.rectangle(bbox2, fill="red")
-                    draw.text((b[2], b[1] - 15), text2, fill="white")
-        
-            orig_image.save(f"../outputs/predictions/single_pred.png")
+def run_on_image(image_path, model, device, threshold, explainability, class_names):
+    to_tensor = transforms.ToTensor()
+    orig_image = Image.open(image_path).convert("RGB")
+    image_tensor = to_tensor(orig_image)
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    if explainability:
+        gradcam = FasterRCNNGradCAM(model)
+        preds, heatmaps = gradcam.compute(image_tensor, device, threshold)
+        gradcam.remove_hooks()
+        if preds is None:
+            print("No detection above threshold.")
+            return
+        save_path = f"{OUTPUT_DIR}/gradcam_single.png"
+        save_gradcam(orig_image, preds, heatmaps, save_path, class_names=class_names)
+        print(f"Saved: {save_path}")
     else:
-        
-        os.makedirs("../outputs/predictions", exist_ok=True)
-
-        img_dir = project_root / config["data"]["images"]["test"]["img_dir"]
-        ann_file = project_root / config["data"]["annotations"]["test"]["ann_file"]
-        dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform, subset_ratio=proportion)
-
-        indices = random.sample(range(len(dataset)), num_images)
         with torch.no_grad():
-            for idx in indices:
-                image_tensor, target = dataset[idx]
-                orig_image = dataset._load_image(dataset.ids[idx])
-
-                #boxes
-                prediction = model([image_tensor.to(device)])[0]
-                draw = ImageDraw.Draw(orig_image)
-
-
-                for box, label in zip(target['boxes'], target['labels']):
-                    b = box.numpy()
-                    draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="green", width=2)
-                    text = str(label.item())
-                    bbox = draw.textbbox((b[0], b[1] - 15), text)
-                    draw.rectangle(bbox, fill="green")
-                    draw.text((b[0], b[1] - 15), text, fill="white")
-
-        
-                for box, label, score in zip(prediction['boxes'], prediction['labels'], prediction['scores']):
-                    if score > threshold: 
-                        b = box.cpu().numpy()
-                        draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline="red", width=3)
-                        text2 = f"{label.item()} : {score:.2f} %"
-                        bbox2 = draw.textbbox((b[2], b[1] - 15), text2)
-                        draw.rectangle(bbox2, fill="red")
-                        draw.text((b[2], b[1] - 15), text2, fill="white")
+            preds = model([image_tensor.to(device)])[0]
+        keep = preds['scores'] > threshold
+        filtered = {k: v[keep] for k, v in preds.items()}
+        save_path = f"{OUTPUT_DIR}/pred_single.png"
+        save_prediction(orig_image, filtered, save_path, class_names=class_names)
+        print(f"Saved: {save_path}")
 
 
-                print(f"image {idx}")
-                print("\nVérité Terrain:")
-                for box, label in zip(target['boxes'], target['labels']):
-                    print(f"- Classe: {label.item()}\n")
+def run_on_dataset(num_images, model, device, threshold, explainability, class_names, config):
+    project_root = Path(__file__).parent.parent
+    img_dir  = project_root / config["data"]["images"]["test"]["img_dir"]
+    ann_file = project_root / config["data"]["annotations"]["test"]["ann_file"]
 
-                print("Prédictions du modèle:")
-                for box, label, score in zip(prediction['boxes'], prediction['labels'], prediction['scores']):
-                    if score > threshold: 
-                        print(f"- Classe: {label.item()} | Score: {score:.2f}\n")
+    dataset = SAR_ATR_Dataset(
+        root=str(img_dir), annFile=str(ann_file),
+        transforms=CocoToFasterRCNN()
+    )
 
-                orig_image.save(f"../outputs/predictions/pred_{idx}.png")
-                print('-'*60)
-        
+    indices = random.sample(range(len(dataset)), min(num_images, len(dataset)))
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    gradcam = FasterRCNNGradCAM(model) if explainability else None
+
+    for idx in indices:
+        image_tensor, target = dataset[idx]
+        orig_image = dataset._load_image(dataset.ids[idx])
+
+        ground_truth = {'boxes': target['boxes'], 'labels': target['labels']}
+
+        if explainability:
+            preds, heatmaps = gradcam.compute(image_tensor, device, threshold)
+            if preds is None:
+                print(f"[{idx}] No detection above threshold.")
+                continue
+            save_path = f"{OUTPUT_DIR}/gradcam_{idx}.png"
+            save_gradcam(orig_image, preds, heatmaps, save_path, ground_truth=ground_truth, class_names=class_names)
+        else:
+            with torch.no_grad():
+                preds = model([image_tensor.to(device)])[0]
+            keep = preds['scores'] > threshold
+            filtered = {k: v[keep] for k, v in preds.items()}
+            save_path = f"{OUTPUT_DIR}/pred_{idx}.png"
+            save_prediction(orig_image, filtered, save_path, ground_truth=ground_truth, class_names=class_names)
+
+        print(f"[{idx}] Saved: {save_path}")
+
+    if gradcam:
+        gradcam.remove_hooks()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Faster RCNN inference")
+    parser.add_argument('--image_path',     type=str,   default=None,  help='Path to a single image')
+    parser.add_argument('--num_images',     type=int,   default=5,     help='Number of images from test dataset')
+    parser.add_argument('--threshold',      type=float, default=0.5,   help='Detection score threshold')
+    parser.add_argument('--explainability', action='store_true',       help='Enable GradCAM visualization')
+    args = parser.parse_args()
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    print(f"Device: {device}")
+
+    config      = load_config()
+    class_names = load_class_names()
+    model       = load_model(device)
+
+    if args.image_path:
+        run_on_image(args.image_path, model, device, args.threshold, args.explainability, class_names)
+    else:
+        run_on_dataset(args.num_images, model, device, args.threshold, args.explainability, class_names, config)
 
 
 if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--num_classes', type=int, default=10, help='number of classes')
-    parser.add_argument('--num_images', type=int, default=1, help='number of images we want to visualize')
-    parser.add_argument('--image_path', type=str, default=None, help='Path to an image')
-    parser.add_argument('--threshold', type=float, default=0.5, help='threshold of detection')
-    parser.add_argument('--proportion', type=float, default=1.0, help='proportion of the original dataset')
-    args = parser.parse_args()
-    predict(args.num_classes, args.num_images, args.image_path, args.threshold, args.proportion)
+    main()
