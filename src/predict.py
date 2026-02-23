@@ -33,10 +33,14 @@ def load_class_names():
 
 
 def load_model(device):
-    model = get_model(None)  # num_classes inferred from checkpoint
-    model.load_state_dict(torch.load("../models/faster_rcnn.pt", map_location=device))
+    checkpoint = torch.load("../models/faster_rcnn.pt", map_location=device)
+    # Le predictor sauvegardé contient la bonne shape
+    num_classes = checkpoint["roi_heads.box_predictor.cls_score.weight"].shape[0]
+    
+    model = get_model(num_classes)
+    model.load_state_dict(checkpoint)
     model.to(device)
-    num_classes = model.roi_heads.box_predictor.cls_score.out_features
+    
     print(f"Model loaded — {num_classes} classes (including background)")
     return model
 
