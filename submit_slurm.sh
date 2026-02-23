@@ -34,16 +34,16 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Répertoire du projet (là où se trouve train_cluster.py)
-PROJECT_DIR="$HOME/ATR_SAR"
+PROJECT_DIR="/scratch/students/$HOME/ATR_SAR"
 
 # Chemin vers le dataset sur le stockage rapide BeeGFS (préférer /scratch/ à /home/)
-DATA_DIR="/scratch/$USER/SOC_50classes_coco/SOC_50classes_coco"
+DATA_DIR="/scratch/student/$USER/SOC_40classes_coco/SOC_40classes_coco"
 
 # Répertoire de sortie des checkpoints
-OUTPUT_DIR="/scratch/$USER/outputs/yolox_radar"
+OUTPUT_DIR="/scratch/students/$USER/outputs/yolox_radar"
 
 # Paramètres d'entraînement
-MAX_EPOCH=100
+MAX_EPOCH=30
 BATCH_SIZE=32
 FP16="--fp16"          # mettre "--no-fp16" pour désactiver
 
