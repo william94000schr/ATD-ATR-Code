@@ -4,16 +4,16 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 
-def _draw_boxes(draw, boxes, labels, scores=None, color="red", class_names=None):
+def _draw_boxes(draw, boxes, labels, scores=None, color="red", class_names=None, text_below=False):
     for i, (box, label) in enumerate(zip(boxes, labels)):
         b = box.cpu().numpy()
         draw.rectangle([(b[0], b[1]), (b[2], b[3])], outline=color, width=2)
         name = class_names.get(str(label.item()), str(label.item())) if class_names else str(label.item())
         text = f"{name} {scores[i]:.2f}" if scores is not None else name
-        bbox = draw.textbbox((b[0], b[1] - 14), text)
+        y_text = b[3] if text_below else b[1] - 14
+        bbox = draw.textbbox((b[0], y_text), text)
         draw.rectangle(bbox, fill=color)
-        draw.text((b[0], b[1] - 14), text, fill="white")
-
+        draw.text((b[0], y_text), text, fill="white")
 
 def save_prediction(orig_image, preds, save_path, ground_truth=None, class_names=None):
     """Save image with predictions (red) and optional ground truth (green)."""

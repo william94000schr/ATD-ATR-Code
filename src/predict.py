@@ -33,6 +33,21 @@ def load_model(device):
     print(f"Model loaded — {num_classes} classes (including background)")
     return model
 
+def _print_results(preds, ground_truth=None, class_names=None):
+    if ground_truth is not None:
+        print("Ground truth:")
+        for label in ground_truth['labels']:
+            name = class_names.get(str(label.item()), str(label.item())) if class_names else str(label.item())
+            print(f"  - {name}")
+
+    if len(preds['boxes']) == 0:
+        print("No detection above threshold.")
+    else:
+        print("Predictions:")
+        for label, score in zip(preds['labels'], preds['scores']):
+            name = class_names.get(str(label.item()), str(label.item())) if class_names else str(label.item())
+            print(f"  - {name} | score: {score:.2f}")
+
 
 def run_on_image(image_path, model, device, threshold=0.5, explainability=False, ground_truth=None, class_names=None):
     orig_image   = Image.open(image_path).convert("RGB")
@@ -45,9 +60,7 @@ def run_on_image(image_path, model, device, threshold=0.5, explainability=False,
         gradcam = FasterRCNNGradCAM(model)
         preds, heatmaps = gradcam.compute(image_tensor, device, threshold)
         gradcam.remove_hooks()
-        if preds is None:
-            print("No detection above threshold.")
-            return None
+        _print_results(preds, ground_truth, class_names)
         save_path = f"{OUTPUT_DIR}/gradcam_{image_name}.png"
         save_gradcam(orig_image, preds, heatmaps, save_path, ground_truth=ground_truth, class_names=class_names)
     else:
@@ -55,6 +68,7 @@ def run_on_image(image_path, model, device, threshold=0.5, explainability=False,
             preds = model([image_tensor.to(device)])[0]
         keep = preds['scores'] > threshold
         filtered = {k: v[keep] for k, v in preds.items()}
+        _print_results(preds, ground_truth, class_names)
         save_path = f"{OUTPUT_DIR}/pred_{image_name}.png"
         save_prediction(orig_image, filtered, save_path, ground_truth=ground_truth, class_names=class_names)
 
