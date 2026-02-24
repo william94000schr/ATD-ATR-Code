@@ -49,7 +49,7 @@ def _print_results(preds, ground_truth=None, class_names=None):
             print(f"  - {name} | score: {score:.2f}")
 
 
-def run_on_image(image_path, model, device, threshold=0.5, explainability=False, ground_truth=None, class_names=None):
+def run_on_image(image_path, model, device, threshold, explainability=False, ground_truth=None, class_names=None):
     orig_image   = Image.open(image_path).convert("RGB")
     image_tensor = transforms.ToTensor()(orig_image)
     image_name   = Path(image_path).stem
