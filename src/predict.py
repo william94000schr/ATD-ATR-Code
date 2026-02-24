@@ -72,7 +72,7 @@ def run_on_image(image_path, model, device, threshold, explainability=False, gro
         save_path = f"{OUTPUT_DIR}/pred_{image_name}.png"
         save_prediction(orig_image, filtered, save_path, ground_truth=ground_truth, class_names=class_names)
 
-    print(f"Saved: {save_path}")
+    #print(f"Saved: {save_path}")
     return save_path
 
 
