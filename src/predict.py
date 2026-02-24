@@ -68,7 +68,7 @@ def run_on_image(image_path, model, device, threshold, explainability=False, gro
             preds = model([image_tensor.to(device)])[0]
         keep = preds['scores'] > threshold
         filtered = {k: v[keep] for k, v in preds.items()}
-        _print_results(preds, ground_truth, class_names)
+        _print_results(filtered, ground_truth, class_names)
         save_path = f"{OUTPUT_DIR}/pred_{image_name}.png"
         save_prediction(orig_image, filtered, save_path, ground_truth=ground_truth, class_names=class_names)
 
