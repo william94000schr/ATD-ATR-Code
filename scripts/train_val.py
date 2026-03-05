@@ -144,8 +144,7 @@ def validate_one_epoch(model, val_loader, device, use_amp, epoch):
 def main(num_classes, num_epochs, proportion):
     
     # Configuration
-    project_root = Path(__file__).parent.parent 
-    config_path = project_root / "config" / "config.yaml"
+    config_path = project_root / "experiments" / "config" / "config.yaml"
     with open(config_path, 'r') as stream:
         config = yaml.safe_load(stream)
 
@@ -236,16 +235,16 @@ def main(num_classes, num_epochs, proportion):
         })
 
     # Sauvegarde
-    os.makedirs("../outputs", exist_ok=True)
-    with open("../outputs/train_results.json", "w", encoding="utf-8") as file:
+    os.makedirs("../experiments/outputs", exist_ok=True)
+    with open("../experiments/outputs/train_results.json", "w", encoding="utf-8") as file:
         json.dump(results, file, indent=2, ensure_ascii=False)
     
-    os.makedirs("../models", exist_ok=True)
-    torch.save(model.state_dict(), "../models/faster_rcnn.pt")
+    os.makedirs("../experiments/models", exist_ok=True)
+    torch.save(model.state_dict(), "../experiments/models/faster_rcnn.pt")
     
     print("Training completed!")
-    print(f"Model saved to: ../models/faster_rcnn.pt")
-    print(f"Results saved to: ../outputs/train_results.json")
+    print(f"Model saved to: ../experiments/models/faster_rcnn.pt")
+    print(f"Results saved to: ../experiments/outputs/train_results.json")
 
 
 if __name__ == "__main__":

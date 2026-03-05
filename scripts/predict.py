@@ -20,11 +20,11 @@ from visualization.visualization import save_prediction, save_gradcam
 from visualization.gradcam import FasterRCNNGradCAM
 
 
-OUTPUT_DIR = "../outputs/predictions"
+OUTPUT_DIR = project_root / "experiments" / "outputs" / "predictions"
 
 
 def load_class_names():
-    path = "../config/classes.json"
+    path = "../experiments/config/classes.json"
     if os.path.exists(path):
         with open(path, 'r') as f:
             return json.load(f)

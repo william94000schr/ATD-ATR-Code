@@ -47,8 +47,7 @@ def get_class_names(ann_file):
 
 def validation(num_classes, proportion):
 
-    project_root = Path(__file__).parent.parent 
-    config_path = project_root / "config" / "config.yaml"
+    config_path = project_root / "experiments" / "config" / "config.yaml"
     with open(config_path, 'r') as stream:
         config = yaml.safe_load(stream)
 
@@ -63,7 +62,7 @@ def validation(num_classes, proportion):
     my_transform = CocoToFasterRCNN()
     dataset = SAR_ATR_Dataset(root = str(img_dir), annFile = str(ann_file), transforms=my_transform, subset_ratio=proportion)
 
-    model_path = "../models/faster_rcnn.pt"
+    model_path = "../experiments/models/faster_rcnn.pt"
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found: {model_path}")
     
@@ -127,8 +126,8 @@ def validation(num_classes, proportion):
         "detailed_results" : results_detailed
     }
 
-    os.makedirs("../outputs", exist_ok=True)
-    with open("../outputs/test_results.json", "w", encoding="utf-8") as file:
+    os.makedirs("../experiments/outputs", exist_ok=True)
+    with open("../experiments/outputs/test_results.json", "w", encoding="utf-8") as file:
         json.dump(json_results, file, indent=2, ensure_ascii=False)
     print("Results saved")
 
