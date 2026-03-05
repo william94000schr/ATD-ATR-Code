@@ -1,0 +1,10 @@
+matplotlib
+numpy
+Pillow
+pycocotools
+PyYAML
+seaborn
+torch
+torchmetrics
+torchvision
+tqdm
