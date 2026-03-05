@@ -1,25 +1,16 @@
 import os
 from pathlib import Path
 import torch # type: ignore
-from torch.utils.data import DataLoader, random_split # type: ignore
+from torch.utils.data import DataLoader # type: ignore
 from torch.cuda.amp import autocast, GradScaler # type: ignore
 import yaml
 import json
 import argparse
 import warnings
-import sys
-
-# Get the project root
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Add src/ to path
-sys.path.append(os.path.join(project_root, "src"))
-from data.transforms import CocoToFasterRCNN
-from data.dataset import SAR_ATR_Dataset
-from models.model import get_model
-
-from tqdm import tqdm
-
+from transforms import CocoToFasterRCNN
+from dataset import SAR_ATR_Dataset
+from model import get_model
+from tqdm import tqdm # type: ignore
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 def collate_fn(batch):
@@ -91,56 +82,6 @@ def train_one_epoch(model, train_loader, optimizer, device, scaler, use_amp, epo
     return result
 
 
-def validate_one_epoch(model, val_loader, device, use_amp, epoch):
-    """Valide le modèle sur une epoch"""
-    model.train()
-    
-    result = {
-        "loss_classifier": 0,
-        "loss_box_reg": 0,
-        "loss_objectness": 0,
-        "loss_rpn_box_reg": 0,
-        "loss_total": 0
-    }
-    num_batches = 0
-
-    pbar = tqdm(val_loader, desc=f"Val Epoch {epoch}")
-    
-    with torch.no_grad():  
-        for images, targets in pbar:
-            images = list(image.to(device) for image in images)
-            targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
-            if use_amp:
-                with autocast():
-                    loss_dict = model(images, targets)
-                    losses_epoch = sum(loss for loss in loss_dict.values())
-            else:
-                loss_dict = model(images, targets)
-                losses_epoch = sum(loss for loss in loss_dict.values())
-
-            result["loss_classifier"] += loss_dict["loss_classifier"].item()
-            result["loss_box_reg"] += loss_dict["loss_box_reg"].item()
-            result["loss_objectness"] += loss_dict["loss_objectness"].item()
-            result["loss_rpn_box_reg"] += loss_dict["loss_rpn_box_reg"].item()
-            result["loss_total"] += losses_epoch.item()
-            
-            pbar.set_postfix({
-                'total': f'{losses_epoch.item():.3f}',
-                'cls': f'{loss_dict["loss_classifier"].item():.3f}',
-                'box': f'{loss_dict["loss_box_reg"].item():.3f}',
-                'obj': f'{loss_dict["loss_objectness"].item():.3f}'               
-            })
-            
-            num_batches += 1
-
-    # Moyenne des losses
-    for key in result:
-        result[key] /= num_batches
-    
-    return result
-
-
 def main(num_classes, num_epochs, proportion):
     
     # Configuration
@@ -159,26 +100,16 @@ def main(num_classes, num_epochs, proportion):
     full_dataset = SAR_ATR_Dataset(root=str(img_dir), annFile=str(ann_file), 
                                    transforms=my_transform, subset_ratio=proportion)
 
-    # Split train/val
-    train_size = int(0.8 * len(full_dataset))
-    val_size = len(full_dataset) - train_size
-    generator1 = torch.Generator().manual_seed(94)
-    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], 
-                                              generator=generator1)
-
-    print(f"Dataset sizes - Train: {train_size}, Val: {val_size}")
 
     # DataLoaders
-    train_loader = DataLoader(train_dataset, batch_size=config["training"]["batch_size"], 
+    train_loader = DataLoader(full_dataset, batch_size=config["training"]["batch_size"], 
                             shuffle=True, collate_fn=collate_fn, num_workers=2, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=config["training"]["batch_size"], 
-                          shuffle=False, collate_fn=collate_fn, num_workers=2, pin_memory=True)
 
     # Modèle
     model = get_model(num_classes + 1)
     model.to(device)
 
-
+    # Optimizer
     params = [p for p in model.parameters() if p.requires_grad]
 
     initial_lr = config["training"]["learning_rate_schedule"][0]["lr"]
@@ -187,7 +118,7 @@ def main(num_classes, num_epochs, proportion):
                                 weight_decay=config["training"]["weight_decay"]
                                 )
     
-
+    # Learning rate schedule desde config
     lr_schedule = config["training"]["learning_rate_schedule"]
     print("\nLearning Rate Schedule:")
     for stage in lr_schedule:
@@ -203,7 +134,7 @@ def main(num_classes, num_epochs, proportion):
     # Boucle d'entraînement
     results = []
     for epoch in range(num_epochs):
-
+        # Actualizar learning rate según el schedule
         current_lr = update_learning_rate(optimizer, epoch, lr_schedule)
         
         print(f"\n{'='*60}")
@@ -214,8 +145,7 @@ def main(num_classes, num_epochs, proportion):
         train_result = train_one_epoch(model, train_loader, optimizer, device, 
                                       scaler, use_amp, epoch)
         
-        # Validation
-        val_result = validate_one_epoch(model, val_loader, device, use_amp, epoch)
+
         
         # Affichage
         print(f"\n--- Epoch {epoch} Results ---")
@@ -223,17 +153,17 @@ def main(num_classes, num_epochs, proportion):
         for key, value in train_result.items():
             print(f"  {key}: {value:.4f}")
         
-        print("\nVALIDATION:")
-        for key, value in val_result.items():
-            print(f"  {key}: {value:.4f}")
         
         # Stockage des résultats
         results.append({
             "epoch": epoch,
             "learning_rate": current_lr,
-            "train": train_result,
-            "val": val_result
+            "train": train_result
         })
+
+        if (epoch + 1) % 2 == 0:
+            os.makedirs("../models", exist_ok=True)
+            torch.save(model.state_dict(), f"../models/checkpoint_epoch{epoch+1}.pt")
 
     # Sauvegarde
     os.makedirs("../outputs", exist_ok=True)
