@@ -10,7 +10,7 @@ import warnings
 import sys
 
 # Get the project root
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Add src/ to path
 sys.path.append(os.path.join(project_root, "src"))
