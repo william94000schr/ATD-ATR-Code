@@ -2,14 +2,22 @@ import os
 import json
 import argparse
 from pathlib import Path
+import sys
 
 import torch
 from PIL import Image
 from torchvision import transforms
 
-from model import get_model
-from visualization import save_prediction, save_gradcam
-from gradcam import FasterRCNNGradCAM
+
+# Get the project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Add src/ to path
+sys.path.append(os.path.join(project_root, "src"))
+
+from models.model import get_model
+from visualization.visualization import save_prediction, save_gradcam
+from visualization.gradcam import FasterRCNNGradCAM
 
 
 OUTPUT_DIR = "../outputs/predictions"
