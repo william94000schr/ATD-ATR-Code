@@ -7,9 +7,17 @@ import yaml
 import json
 import argparse
 import warnings
-from transforms import CocoToFasterRCNN
-from dataset import SAR_ATR_Dataset
-from model import get_model
+import sys
+
+# Get the project root
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Add src/ to path
+sys.path.append(os.path.join(project_root, "src"))
+from data.transforms import CocoToFasterRCNN
+from data.dataset import SAR_ATR_Dataset
+from models.model import get_model
+
 from tqdm import tqdm # type: ignore
 warnings.filterwarnings('ignore', category=FutureWarning)
 
