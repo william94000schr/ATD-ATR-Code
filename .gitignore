@@ -1,0 +1,19 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+
+
+# === uv / virtualenv ===
+.venv/
+
+# === OS / IDE ===
+.vscode/
+
+# deprecated
+draft/
+
+# dataset
+data/annotations
+data/images

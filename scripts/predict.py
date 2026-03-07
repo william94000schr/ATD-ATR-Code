@@ -2,21 +2,29 @@ import os
 import json
 import argparse
 from pathlib import Path
+import sys
 
 import torch
 from PIL import Image
 from torchvision import transforms
 
-from model import get_model
-from visualization import save_prediction, save_gradcam
-from gradcam import FasterRCNNGradCAM
+
+# Get the project root
+project_root = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Add src/ to path
+sys.path.append(os.path.join(project_root, "src"))
+
+from models.model import get_model
+from visualization.visualization import save_prediction, save_gradcam
+from visualization.gradcam import FasterRCNNGradCAM
 
 
-OUTPUT_DIR = "../outputs/predictions"
+OUTPUT_DIR = project_root / "experiments" / "outputs" / "predictions"
 
 
 def load_class_names():
-    path = "../config/classes.json"
+    path = "../experiments/config/classes.json"
     if os.path.exists(path):
         with open(path, 'r') as f:
             return json.load(f)
@@ -24,7 +32,7 @@ def load_class_names():
 
 
 def load_model(device):
-    checkpoint = torch.load("../models/faster_rcnn.pt", map_location=device)
+    checkpoint = torch.load("../experiments/models/faster_rcnn.pt", map_location=device)
     num_classes = checkpoint["roi_heads.box_predictor.cls_score.weight"].shape[0]
     model = get_model(num_classes)
     model.load_state_dict(checkpoint)
