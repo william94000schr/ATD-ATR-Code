@@ -1,0 +1,36 @@
+[project]
+name = "atr-sar"
+version = "0.1.0"
+description = "Automatic Target Recognition in SAR images using Faster R-CNN"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "scripts"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "D",   # pydocstyle
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
+ignore = [
+    "D100",  # Missing docstring in public module  (scripts are self-describing)
+    "D104",  # Missing docstring in public package
+    "D203",  # one-blank-line-before-class (conflicts with D211)
+    "D213",  # multi-line-summary-second-line (conflicts with D212)
+    "N",     # pep8-naming — identifiers are kept as-is
+    "B905",  # zip() without strict= — existing code, not modified
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["D101", "D102", "D103", "D415", "E402"]  # script-level: no full docstrings required; E402 unavoidable with sys.path patching

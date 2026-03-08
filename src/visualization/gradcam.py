@@ -6,6 +6,12 @@ class FasterRCNNGradCAM:
     """GradCAM for Faster RCNN ResNet50 FPN — targets backbone.body.layer4."""
 
     def __init__(self, model, target_layer_name="backbone.body.layer4.2.conv3"):
+        """Register forward and backward hooks on the target layer.
+
+        Args:
+            model: A Faster R-CNN model.
+            target_layer_name: Dot-separated path to the layer to hook into.
+        """
         self.model = model
         self.activations = None
         self.gradients = None
@@ -28,14 +34,23 @@ class FasterRCNNGradCAM:
         self.gradients = grad_output[0].detach()
 
     def remove_hooks(self):
+        """Remove all registered forward and backward hooks."""
         for h in self._hooks:
             h.remove()
 
     def compute(self, image_tensor, device, threshold=0.5, target_class=None):
-        """
+        """Run the model and compute GradCAM heatmaps for each detection above threshold.
+
+        Args:
+            image_tensor: CHW float tensor for a single image.
+            device: Torch device to run inference on.
+            threshold: Minimum score to keep a detection.
+            target_class: If set, only keep detections of this class label.
+
         Returns:
-            filtered_preds : dict(boxes, labels, scores) or None
-            heatmaps       : list of np.array (H, W) in [0, 1]
+            Tuple of (filtered_preds, heatmaps) where filtered_preds is a dict with
+            ``boxes``, ``labels``, ``scores`` (or None if no detections), and heatmaps
+            is a list of np.array of shape (H, W) in [0, 1].
         """
         self.model.eval()
         image = image_tensor.unsqueeze(0).to(device)
@@ -43,13 +58,13 @@ class FasterRCNNGradCAM:
         with torch.enable_grad():
             predictions = self.model(image)[0]
 
-        keep = predictions['scores'] > threshold
+        keep = predictions["scores"] > threshold
         if target_class is not None:
-            keep = keep & (predictions['labels'] == target_class)
+            keep = keep & (predictions["labels"] == target_class)
 
-        boxes  = predictions['boxes'][keep]
-        labels = predictions['labels'][keep]
-        scores = predictions['scores'][keep]
+        boxes = predictions["boxes"][keep]
+        labels = predictions["labels"][keep]
+        scores = predictions["scores"][keep]
 
         if len(scores) == 0:
             return None, []
@@ -65,7 +80,7 @@ class FasterRCNNGradCAM:
                 heatmaps.append(None)
                 continue
 
-            weights = self.gradients.mean(dim=(2, 3))[0]          # (C,)
+            weights = self.gradients.mean(dim=(2, 3))[0]  # (C,)
             cam = (weights[:, None, None] * self.activations[0]).sum(dim=0)  # (H, W)
             cam = F.relu(cam)
 
@@ -75,4 +90,8 @@ class FasterRCNNGradCAM:
 
             heatmaps.append(cam.cpu().numpy())
 
-        return {'boxes': boxes.detach(), 'labels': labels.detach(), 'scores': scores.detach()}, heatmaps
+        return {
+            "boxes": boxes.detach(),
+            "labels": labels.detach(),
+            "scores": scores.detach(),
+        }, heatmaps
