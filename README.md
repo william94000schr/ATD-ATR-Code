@@ -104,6 +104,46 @@ Data paths, batch size, and learning rate schedule can all be adjusted in `exper
 
 ---
 
+## Pre-trained Weights & Provided Data
+
+Processed datasets and trained model weights are available for download via Google Drive:
+
+📁 [Download datasets and weights](https://drive.google.com/drive/u/0/folders/1yu1Cb0r8uCBfdTcCfNXY8aBreFWryY-Q)
+
+The Drive folder contains two sub-folders:
+
+- **SOC 40 classes** — dataset (`.tar` archive) + model weights (`.pt`) that reproduce the 40-class results
+- **SOC 17 classes** — dataset (`.tar` archive) + model weights (`.pt`) that reproduce the 17-class results
+
+### Setup instructions
+
+**1. Extract the dataset**
+```bash
+tar -xf dataset.tar
+```
+
+Move the extracted contents so that the repository layout matches:
+```
+data/
+├── images/
+│   ├── train/
+│   └── test/
+└── annotations/
+    ├── train.json
+    └── test.json
+```
+
+**2. Place the model weights**
+
+Copy the `.pt` file to:
+```
+experiments/models/faster_rcnn.pt
+```
+
+Once both are in place, you can run evaluation or inference directly — no training required.
+
+---
+
 ## Training
 
 **Train only** (saves checkpoints every 2 epochs and a final model):
