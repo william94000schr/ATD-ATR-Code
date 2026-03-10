@@ -1,4 +1,4 @@
-# ATR-SAR — Automatic Target Recognition in SAR Images
+# ATD-ATR-SAR — Automatic Target Detection and Recognition in SAR Images
 
 Automatic Target Detection and Recognition (ATD/ATR) in Synthetic Aperture Radar (SAR) images using **Faster R-CNN ResNet-50 FPN v2**.
 
@@ -110,10 +110,9 @@ Processed datasets and trained model weights are available for download via Goog
 
 📁 [Download datasets and weights](https://drive.google.com/drive/u/0/folders/1yu1Cb0r8uCBfdTcCfNXY8aBreFWryY-Q)
 
-The Drive folder contains two sub-folders:
+The Drive folder contains one sub-folder per configuration, each including the dataset (`.tar` archive), the `config.json` file mapping class IDs to names, and — where available — the corresponding trained weights (`.pt`). 
 
-- **SOC 40 classes** — dataset (`.tar` archive) + model weights (`.pt`) that reproduce the 40-class results
-- **SOC 17 classes** — dataset (`.tar` archive) + model weights (`.pt`) that reproduce the 17-class results
+Pre-trained weights are provided for the **SOC 40-class** and **SOC 17-class** configurations.
 
 ### Setup instructions
 
@@ -133,7 +132,12 @@ data/
     └── test.json
 ```
 
-**2. Place the model weights**
+**2. Place the model weights and config**
+
+Copy the `config.json` file to:
+```
+experiments/config/classes.json
+```
 
 Copy the `.pt` file to:
 ```
