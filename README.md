@@ -162,7 +162,8 @@ Once both are in place, you can run evaluation or inference directly — no trai
 **Train only** (saves checkpoints every 2 epochs and a final model):
 
 ```bash
-python scripts/train.py \
+cd scripts
+python train.py \
     --num_classes 17 \
     --num_epochs 15 \
     --proportion 1.0
@@ -171,7 +172,8 @@ python scripts/train.py \
 **Train + validation split** (80/20 split, tracks validation loss):
 
 ```bash
-python scripts/train_val.py \
+cd scripts
+python train_val.py \
     --num_classes 17 \
     --num_epochs 15 \
     --proportion 1.0
@@ -204,7 +206,8 @@ Training metrics are saved to `experiments/outputs/train_results.json`.
 Evaluate the trained model on the test set and compute mAP (via `torchmetrics`):
 
 ```bash
-python scripts/validation.py \
+cd scripts
+python validation.py \
     --num_classes 17 \
     --proportion 1.0
 ```
@@ -218,7 +221,8 @@ Results are saved to `experiments/outputs/test_results.json`, including global m
 Run prediction on a single image:
 
 ```bash
-python scripts/predict.py \
+cd scripts
+python predict.py \
     --image_path path/to/image.png \
     --threshold 0.5
 ```
@@ -226,7 +230,8 @@ python scripts/predict.py \
 With GradCAM explainability overlay:
 
 ```bash
-python scripts/predict.py \
+cd scripts
+python predict.py \
     --image_path path/to/image.png \
     --threshold 0.5 \
     --explainability
