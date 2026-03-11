@@ -1,6 +1,6 @@
 # ATD-ATR-SAR — Automatic Target Detection and Recognition in SAR Images
 
-Automatic Target Detection and Recognition (ATD/ATR) in Synthetic Aperture Radar (SAR) images using **Faster R-CNN ResNet-50 FPN v2**.
+Automatic Target Detection and Recognition (ATD/ATR) in Synthetic Aperture Radar (SAR) images using **Faster R-CNN**.
 
 ---
 
@@ -92,7 +92,7 @@ uv pip install -r requirements.txt
 # Or with pip
 pip install -r requirements.txt
 ```
-
+> **A GPU is required for training.** Inference can run on CPU (~5000ms/image) but a GPU is strongly recommended (~80ms/image on T4).
 ---
 
 ## Dataset Setup
@@ -113,7 +113,7 @@ Data paths, batch size, and learning rate schedule can all be adjusted in `exper
 
 ---
 
-## Pre-trained Weights & Provided Data
+##  Provided Datasets & Pre-trained Weights
 
 Processed datasets and trained model weights are available for download via Google Drive:
 
@@ -143,7 +143,7 @@ data/
 
 **2. Place the model weights and config**
 
-Copy the `config.json` file to:
+Copy the `classes.json` file to:
 ```
 experiments/config/classes.json
 ```
@@ -217,6 +217,8 @@ Results are saved to `experiments/outputs/test_results.json`, including global m
 ---
 
 ## Inference
+
+> **Prerequisites:** `classes.json` must be placed at `experiments/config/classes.json`. See the Drive folder above for downloads.
 
 Run prediction on a single image:
 
