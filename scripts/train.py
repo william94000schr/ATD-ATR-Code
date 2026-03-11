@@ -177,20 +177,20 @@ def main(num_classes, num_epochs, proportion):
         results.append({"epoch": epoch, "learning_rate": current_lr, "train": train_result})
 
         if (epoch + 1) % 2 == 0:
-            os.makedirs("../experiments/models", exist_ok=True)
-            torch.save(model.state_dict(), f"../experiments/models/checkpoint_epoch{epoch + 1}.pt")
+            os.makedirs(project_root / "experiments" / "models", exist_ok=True)
+            torch.save(model.state_dict(), project_root / "experiments" / "models" / f"checkpoint_epoch{epoch + 1}.pt")
 
     # Sauvegarde
-    os.makedirs("../experiments/outputs", exist_ok=True)
-    with open("../experiments/outputs/train_results.json", "w", encoding="utf-8") as file:
+    os.makedirs(project_root / "experiments" / "outputs", exist_ok=True)
+    with open(project_root / "experiments" / "outputs" / "train_results.json", "w", encoding="utf-8") as file:
         json.dump(results, file, indent=2, ensure_ascii=False)
 
-    os.makedirs("../experiments/models", exist_ok=True)
-    torch.save(model.state_dict(), "../experiments/models/faster_rcnn.pt")
+    os.makedirs(project_root / "experiments" / "models", exist_ok=True)
+    torch.save(model.state_dict(), project_root / "experiments" / "models" / "faster_rcnn.pt")
 
     print("Training completed!")
-    print("Model saved to: ../models/faster_rcnn.pt")
-    print("Results saved to: ../outputs/train_results.json")
+    print(f"Model saved to: {project_root}/models/faster_rcnn.pt")
+    print(f"Results saved to: {project_root}/outputs/train_results.json")
 
 
 if __name__ == "__main__":

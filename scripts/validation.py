@@ -67,7 +67,7 @@ def validation(num_classes, proportion):
         root=str(img_dir), annFile=str(ann_file), transforms=my_transform, subset_ratio=proportion
     )
 
-    model_path = "../experiments/models/faster_rcnn.pt"
+    model_path = project_root / "experiments" / "models" / "faster_rcnn.pt"
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found: {model_path}")
 
@@ -131,8 +131,8 @@ def validation(num_classes, proportion):
         "detailed_results": results_detailed,
     }
 
-    os.makedirs("../experiments/outputs", exist_ok=True)
-    with open("../experiments/outputs/test_results.json", "w", encoding="utf-8") as file:
+    os.makedirs(project_root / "experiments" / "outputs", exist_ok=True)
+    with open(project_root / "experiments" / "outputs" / "test_results.json", "w", encoding="utf-8") as file:
         json.dump(json_results, file, indent=2, ensure_ascii=False)
     print("Results saved")
 

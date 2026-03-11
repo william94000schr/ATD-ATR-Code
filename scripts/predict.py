@@ -20,6 +20,8 @@ from visualization.visualization import save_gradcam, save_prediction
 
 OUTPUT_DIR = project_root / "experiments" / "outputs" / "predictions"
 
+EXPERIMENTS_DIR = project_root / "experiments"
+
 
 def load_class_names():
     path = "../experiments/config/classes.json"
@@ -30,7 +32,7 @@ def load_class_names():
 
 
 def load_model(device):
-    checkpoint = torch.load("../experiments/models/faster_rcnn.pt", map_location=device)
+    checkpoint = torch.load(EXPERIMENTS_DIR / "models" / "faster_rcnn.pt", map_location=device)
     num_classes = checkpoint["roi_heads.box_predictor.cls_score.weight"].shape[0]
     model = get_model(num_classes)
     model.load_state_dict(checkpoint)
