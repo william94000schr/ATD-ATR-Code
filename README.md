@@ -6,7 +6,16 @@ Automatic Target Detection and Recognition (ATD/ATR) in Synthetic Aperture Radar
 
 ## Overview
 
-This project trains and evaluates an object detection model capable of simultaneously **localizing and classifying ground vehicles** in SAR images — a significantly harder task than single-target classification, as the model must handle full scenes with no prior knowledge of object location.
+This project trains and evaluates an object detection model capable of simultaneously **localizing and classifying ground vehicles** in SAR images.
+
+<p>
+  <img src="assets/pred1.png" width="23%"/>
+  <img src="assets/pred2.png" width="23%"/>
+  <img src="assets/pred3.png" width="23%"/>
+  <img src="assets/pred4.png" width="23%"/>
+</p>
+
+> 🟢 Ground truth — 🔴 Model prediction
 
 ---
 
@@ -20,7 +29,7 @@ The model was trained and evaluated on the **NUDT4MSTAR SOC** dataset (~68 000 i
 | 22 classes      | 0.9158 |
 | **17 classes**  | **0.9352** |
 
-The 17-class model **surpasses the Faster R-CNN baseline reported in the reference paper** (mAP@50 = 0.883), while using a stricter train/val split that reduces available training data.
+The **40-class model surpasses the Faster R-CNN baseline reported in the [reference paper](https://arxiv.org/html/2501.13354v2)** (mAP@50 = 0.883), while using a stricter train/val split that reduces available training data. Successive class groupings then allowed us to further improve performance, reaching **0.9352 mAP@50** with the 17-class configuration.
 
 The delivered model detects the following 17 vehicle categories:
 
