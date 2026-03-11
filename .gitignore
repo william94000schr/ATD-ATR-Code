@@ -17,3 +17,9 @@ draft/
 # dataset
 data/annotations
 data/images
+
+# model weights
+experiments/models/
+
+# outputs
+experiments/outputs/
