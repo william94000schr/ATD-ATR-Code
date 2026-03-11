@@ -17,6 +17,9 @@ draft/
 # dataset
 data/
 
+# classes mapping
+experiments/config/classes.json
+
 # model weights
 experiments/models/
 
