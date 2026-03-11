@@ -84,7 +84,7 @@ ATR_SAR/
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd ATR_SAR
+cd ATD-ATR-Code
 
 # Install dependencies (with uv)
 uv pip install -r requirements.txt
